@@ -1,0 +1,25 @@
+Simple Ray Tracer
+=================
+
+srt is a simple ray tracer. Currently it only support rendering a sphere, but
+more is about to come.
+
+Configuration
+-------------
+Without any configuration srt will not perform any visual output. To make a
+visual output you can either use ssil (Small and Simle Image Library) to
+generate a .tga image, or you can write your own code to display the result.
+
+ssil can be found at https://github.com/mrjojo/ssil. See Makefile for more
+information about using it.
+
+If you prefer writing your own code for a visual output you have the data for
+the rendered scene available in the variable 'image'. The data in 'image' is
+an array of pixels, starting with the pixel at the lower left corner and then
+continuing with increasing x value. Each pixel is stored in three bytes
+starting with the red component followed by the green and then the blue.
+
+Building
+--------
+Building srt is as simple as:
+   make

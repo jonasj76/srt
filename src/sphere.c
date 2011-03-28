@@ -108,7 +108,7 @@ float sphere_intersect (sphere_t *sphere, ray_t *ray)
    /* If the length of v is less than zero then the ray is going the opposite
     * direction and will therefore not intersect the sphere */
    if (v < 0 )
-      return 0;
+      return 0.0;
 
    /* Use formula (3) to check for sphere intersection */
    d2 = (sphere->radius * sphere->radius) - (c * c) + (v * v);
@@ -116,7 +116,7 @@ float sphere_intersect (sphere_t *sphere, ray_t *ray)
    /* If d2 is less than zero then d can not be computed, i.e. the ray does
     * not intersect the sphere */
    if (d2 < 0)
-      return 0;
+      return 0.0;
 
    /* The ray hit the sphere, return the distance from the ray origin to
     * the intersection point (P) */

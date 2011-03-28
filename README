@@ -8,10 +8,13 @@ Configuration
 -------------
 Without any configuration srt will not perform any visual output. To make a
 visual output you can either use ssil (Small and Simle Image Library) to
-generate a .tga image, or you can write your own code to display the result.
+generate a .tga image, use ssgl (Small and Simple Graphics Library) to
+open a window with the rendered scene or write your own code to handle the
+output.
 
-ssil can be found at https://github.com/mrjojo/ssil. See Makefile for more
-information about using it.
+See Makefile for more information about using ssil or ssgl.
+ssil can be found at https://github.com/mrjojo/ssil.
+ssgl can be found at https://github.com/mrjojo/ssgl.
 
 If you prefer writing your own code for a visual output you have the data for
 the rendered scene available in the variable 'image'. The data in 'image' is

@@ -32,6 +32,11 @@
 #ifdef SSIL
 #include "tga.h"
 #endif
+#ifdef SSGL
+#include <SDL/SDL.h>
+#include "screen.h"
+#include "draw.h"
+#endif
 
 /* Screen plane object.
  * A screen plane is a rectangle in the scene representing the visual screen.
@@ -162,15 +167,68 @@ int main (void)
       printf ("error: an error occured when rendering the scene.\n");
    }
 
-   /* Save the scene as a .tga image */
-#ifdef SSIL
+#ifdef SSIL   /* Use ssil to save the scene as a .tga image */
    tga_write ("srt.tga", SCREEN_WIDTH, SCREEN_HEIGHT, image);
    printf ("srt.tga was written.\n");
-#else
-   printf ("note: No visual output was written.\n");
-   printf ("      Use ssil or write your own code.\n");
-   printf ("      See README and Makefile for more information.\n");
+
+   return 0;
 #endif
+
+#ifdef SSGL   /* Use ssgl to draw the scene */
+   SDL_Surface *win;   /* Pointer to drawing surface */
+   int x, y;           /* Loop variables for drawing surface coordinates */
+   int k;              /* Offset in rendered image buffer */
+
+   /* Create a drawing surface */
+   win = screen_create (SCREEN_WIDTH, SCREEN_HEIGHT);
+
+   if (!win)
+      return 1;
+
+   /* Lock the surface for directly access */
+   if (screen_lock (win))
+      return 1;
+
+   /* Put the pixels */
+   k = 0;
+   for (y=0; y<SCREEN_HEIGHT; y++)
+      for (x=0; x<SCREEN_WIDTH; x++)
+      {
+         int r,g,b;
+         r = image[k+0];
+         g = image[k+1];
+         b = image[k+2];
+         putpixel(win, x, y, (r<<16) | (g<<8) | b);
+         k += 3;
+      }
+
+   /* Unlock surface */
+   screen_unlock (win);
+
+   /* Update screen  */
+   screen_update (win);
+
+   /* Poll for events; wait until window is closed */
+   while (1)
+   {
+      SDL_Event event;
+
+      while (SDL_PollEvent (&event))
+      {
+         switch (event.type)
+         {
+            case SDL_QUIT:
+               return 0;
+         }
+      }
+   }
+
+   return 0;
+#endif
+
+   printf ("note: No visual output was written.\n");
+   printf ("      Use ssil, ssgl or write your own code.\n");
+   printf ("      See README and Makefile for more information.\n");
 
    return 0;
 }

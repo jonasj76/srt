@@ -19,14 +19,23 @@ RM       = rm -f
 OBJS     = src/vector.o src/sphere.o
 LIBS     = -lm
 
-# Uncomment and correct the paths in the following lines to use
-# ssil (Small and Simle Image Library) when building. Without ssil
-# you don't get any visual output. If you don't wont to use ssil
-# you can write your own visual output routine.
+# Uncomment the lines below for ssil (Small and Simple Image Library) or
+# ssgl (Small and Simple Graphics Library) to use one of the libraries
+# when building. Without ssil or ssgl you won't get any visual output.
+# If you don't wont to use any of the libraries you can instead write your
+# own code to handle the visual output, see README for more information.
 # ssil can be cloned from https://github.com/mrjojo/ssil.git
+# ssgl can be cloned from https://github.com/mrjojo/ssgl.git
+
+# Uncomment the following three lines to use ssil
 #CFLAGS   += -D SSIL
 #CPPFLAGS += -I $(ROOTDIR)/../ssil/include
 #LIBS     += ../ssil/ssil.a
+
+# Uncomment the following three lines to use ssgl
+#CFLAGS   += -D SSGL
+#CPPFLAGS += -I $(ROOTDIR)/../ssgl/include
+#LIBS     += ../ssgl/ssgl.a -lSDL
 
 all:
 	$(MAKE) -C src

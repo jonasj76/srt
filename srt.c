@@ -72,9 +72,9 @@ uint8_t  image[SCREEN_WIDTH*SCREEN_HEIGHT*3];
  * the green and then the blue.
  * For each pixel on the screen, @screen, a ray from the camera through that
  * pixel is generated. If the object, @sphere, in the scene is hit by the
- * ray the color of the pixel will be set to white. If the ray doesn't hit the
- * object, no pixel color is set, i.e. the default background color (black)
- * will remain.
+ * ray the color of the pixel will be set to color of the sphere object. If
+ * the ray doesn't hit the object, no pixel color is set, i.e. the default
+ * background color (black) will remain.
  *
  * Returns:
  * POSIX OK (zero) or non-zero on error.
@@ -98,8 +98,8 @@ int render_scene (uint8_t* image, int image_sz, screen_t *screen, sphere_t *sphe
 
   /* Create directions for each ray, i.e. from the camera/ray origin (0,0,0) to
    * each pixel on the screen. Then test if the ray hits this sphere and set the
-   * pixel to white if a hit occurs or leave the pixel untouched if no hit was
-   * detected. */
+   * pixel to the color of the sphere object, or leave the pixel untouched if
+   * no intersection was detected. */
   for (y = 0; y < screen->height; y++)
   {
     for (x = 0; x < screen->width; x++)
@@ -124,17 +124,22 @@ int render_scene (uint8_t* image, int image_sz, screen_t *screen, sphere_t *sphe
         * greater than zero */
       dist = sphere_intersect (sphere, &ray);
 
-      /* If the sphere was intersected by the ray, make the pixel white, else
-       * leave the pixel untouched, i.e. keep the background color */
+      /* If the sphere was intersected by the ray, set the pixel to the color
+       * of the sphere object, else leave the pixel untouched, i.e. keep the
+       * background color */
       if (dist > 0.0)
       {
+         int r, g, b;
+
          /* Check that new offset isn't pointing outside the image buffer */
          if (image_ofs >= (image_sz))
             return 1;
 
-         image[image_ofs + 0] = 255;
-         image[image_ofs + 1] = 255;
-         image[image_ofs + 2] = 255;
+         sphere_get_color (sphere, &r, &g, &b);
+
+         image[image_ofs + 0] = r;
+         image[image_ofs + 1] = g;
+         image[image_ofs + 2] = b;
       }
 
       /* Update image offset */
@@ -160,6 +165,7 @@ int main (void)
    sphere.center.y = 0;
    sphere.center.z = 600;   /* Must be in front of the camera which is at (0,0,0) */
    sphere.radius   = 100;
+   sphere_set_color (&sphere, 255, 0, 0);
 
    /* Render the scene */
    if (render_scene (image, sizeof(image), &screen, &sphere))

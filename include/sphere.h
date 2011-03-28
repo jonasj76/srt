@@ -31,9 +31,13 @@ typedef struct
 {
    vector_t center;   /* Position */
    float radius;      /* Radius */
+   int r, g, b;       /* Color */
 } sphere_t;
 
 float sphere_intersect (sphere_t *sphere, ray_t *ray);
+
+void sphere_set_color (sphere_t *sphere, int r, int g, int b);
+void sphere_get_color (sphere_t *sphere, int *r, int *g, int *b);
 
 #endif /* __SPHERE_H__ */
 

@@ -124,6 +124,44 @@ float sphere_intersect (sphere_t *sphere, ray_t *ray)
 }
 
 /**
+ * sphere_set_color - Set color of sphere object.
+ * @sphere: Pointer to sphere object.
+ * @r:      Red component color value.
+ * @g:      Green component color value.
+ * @b:      Blue component color value.
+ *
+ * This function will set the color of a sphere object.
+ *
+ * Returns:
+ * none.
+ */
+void sphere_set_color (sphere_t *sphere, int r, int g, int b)
+{
+   sphere->r = r;
+   sphere->g = g;
+   sphere->b = b;
+}
+
+/**
+ * sphere_get_color - Get color of sphere object.
+ * @sphere: Pointer to sphere object.
+ * @r:      Pointer to integer where to return red component.
+ * @g:      Pointer to integer where to return green component.
+ * @b:      Pointer to integer where to return blue component.
+ *
+ * This function will get the color of a sphere object.
+ *
+ * Returns:
+ * none.
+ */
+void sphere_get_color (sphere_t *sphere, int *r, int *g, int *b)
+{
+   *r = sphere->r;
+   *g = sphere->g;
+   *b = sphere->b;
+}
+
+/**
  * Local Variables:
  *  c-file-style: "ellemtel"
  *  indent-tabs-mode: nil

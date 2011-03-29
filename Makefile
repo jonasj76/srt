@@ -19,6 +19,8 @@ RM       = rm -f
 OBJS     = src/vector.o src/sphere.o
 LIBS     = -lm
 
+PATH	:= $(PATH):$(ROOTDIR)
+
 # Uncomment the lines below for ssil (Small and Simple Image Library) or
 # ssgl (Small and Simple Graphics Library) to use one of the libraries
 # when building. Without ssil or ssgl you won't get any visual output.
@@ -38,9 +40,11 @@ LIBS     = -lm
 #LIBS     += ../ssgl/ssgl.a -lSDL
 
 all:
+	@mkversion
 	$(MAKE) -C src
 	$(CC) $(CFLAGS) $(CPPFLAGS) srt.c $(OBJS) $(LIBS) -o $(EXEC)
 
 clean:
 	$(MAKE) -C src clean
+	$(RM) version.h
 	$(RM) $(EXEC)

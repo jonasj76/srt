@@ -37,6 +37,7 @@
 #include "screen.h"
 #include "draw.h"
 #endif
+#include "version.h"
 
 /* Screen plane object.
  * A screen plane is a rectangle in the scene representing the visual screen.
@@ -154,6 +155,9 @@ int main (void)
 {
    screen_t screen;   /* Screen plane  */
    sphere_t sphere;   /* Sphere object */
+
+   /* Print version */
+   printf ("srt %s\n", VERSION);
 
    /* Set screen plane dimension and position */
    screen.width  = SCREEN_WIDTH;

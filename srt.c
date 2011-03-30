@@ -61,10 +61,11 @@ uint8_t  image[SCREEN_WIDTH*SCREEN_HEIGHT*3];
 
 /**
  * render_scence - Creates a rendered scene.
- * @image:    Pointer to buffer which will contain the rendered scene.
- * @image_sz: Size of @image buffer.
- * @screen:   Pointer to a screen plane object.
- * @sphere:   Pointer to a sphere object.
+ * @image:       Pointer to buffer which will contain the rendered scene.
+ * @image_sz:    Size of @image buffer.
+ * @screen:      Pointer to a screen plane object.
+ * @sphere_list: Pointer to a list of sphere object.
+ * @num_spheres: Num of spheres in @sphere_list.
  *
  * This function will create a rendered scene. The output is written to @output
  * and is stored as an array of pixels, starting with the pixel at the lower
@@ -72,15 +73,16 @@ uint8_t  image[SCREEN_WIDTH*SCREEN_HEIGHT*3];
  * stored in three bytes starting a value for the the red component followed by
  * the green and then the blue.
  * For each pixel on the screen, @screen, a ray from the camera through that
- * pixel is generated. If the object, @sphere, in the scene is hit by the
- * ray the color of the pixel will be set to color of the sphere object. If
- * the ray doesn't hit the object, no pixel color is set, i.e. the default
+ * pixel is generated. For each sphere in @sphere_list, a check is made to
+ * see if the object was hit. The closest object to the camera which was hit
+ * is recorded the color of the pixel will be set to color of that object. If
+ * the ray doesn't hit any object, no pixel color is set, i.e. the default
  * background color (black) will remain.
  *
  * Returns:
  * POSIX OK (zero) or non-zero on error.
  */
-int render_scene (uint8_t* image, int image_sz, screen_t *screen, sphere_t *sphere)
+int render_scene (uint8_t* image, int image_sz, screen_t *screen, sphere_t *sphere_list, int num_spheres)
 {
    ray_t ray;       /* The ray that will be used to trace through every pixel of the screen plane */
    int x, y;        /* Loop variables for each pixel on the screen plane */
@@ -105,7 +107,10 @@ int render_scene (uint8_t* image, int image_sz, screen_t *screen, sphere_t *sphe
   {
     for (x = 0; x < screen->width; x++)
     {
-       float dist;   /* Distance from camera/ray origin (0,0,0) to the sphere */
+       int i;
+       int closest_sphere = -1;   /* Array ID of closests sphere, -1 no sphere was hit by the ray */
+       float min_dist = 100000;   /* Distance from camera/ray origin (0,0,0) to the closests sphere. Start value is set so high that if a sphere was hit it should definitely be closer than this value */
+       float dist;                /* Distance from camera/ray origin (0,0,0) to the sphere */
 
        /* Set the ray direction. The x,y center of the screen will be at (0,0),
         * i.e. the same x,y coordinates as the center of the camera. The
@@ -120,28 +125,45 @@ int render_scene (uint8_t* image, int image_sz, screen_t *screen, sphere_t *sphe
        /* Normalize the direction (a must for the intersection test) */
        vector_normal (&ray.dir);
 
-       /* Get distance from camera/ray origin to sphere, i.e. test if the
-        * ray hits the sphere by checking if the returned distance is
-        * greater than zero */
-      dist = sphere_intersect (sphere, &ray);
+       /* Loop through all spheres and check which one is the closest to the camera. */
+       for (i = 0; i < num_spheres; i++)
+       {
+          sphere_t *sphere = &sphere_list[i];   /* Current sphere to check */
 
-      /* If the sphere was intersected by the ray, set the pixel to the color
-       * of the sphere object, else leave the pixel untouched, i.e. keep the
-       * background color */
-      if (dist > 0.0)
-      {
-         int r, g, b;
+          /* Get distance from camera/ray origin to sphere, i.e. test if the
+           * ray hits the sphere by checking if the returned distance is
+           * greater than zero */
+          dist = sphere_intersect (sphere, &ray);
 
-         /* Check that new offset isn't pointing outside the image buffer */
-         if (image_ofs >= (image_sz))
-            return 1;
+          /* Record the current sphere if it was intersected by the ray and closer to the camera than any previous hit sphere. */
+          if (dist > 0.0)
+          {
+             if (dist < min_dist)
+             {
+                min_dist       = dist;
+                closest_sphere = i;
+             }
+          }
+       }
 
-         sphere_get_color (sphere, &r, &g, &b);
+       /* If a sphere was intersected by the ray, set the pixel to the color
+        * of the sphere object, else leave the pixel untouched, i.e. keep the
+        * background color */
+       if (closest_sphere != -1)
+       {
+          sphere_t *sphere = &sphere_list[closest_sphere];
+          int r, g, b;
 
-         image[image_ofs + 0] = r;
-         image[image_ofs + 1] = g;
-         image[image_ofs + 2] = b;
-      }
+          /* Check that new offset isn't pointing outside the image buffer */
+          if (image_ofs >= (image_sz))
+             return 1;
+
+          sphere_get_color (sphere, &r, &g, &b);
+
+          image[image_ofs + 0] = r;
+          image[image_ofs + 1] = g;
+          image[image_ofs + 2] = b;
+       }
 
       /* Update image offset */
       image_ofs += 3;
@@ -153,8 +175,8 @@ int render_scene (uint8_t* image, int image_sz, screen_t *screen, sphere_t *sphe
 
 int main (void)
 {
-   screen_t screen;   /* Screen plane  */
-   sphere_t sphere;   /* Sphere object */
+   screen_t screen;      /* Screen plane  */
+   sphere_t sphere[3];   /* Sphere objects */
 
    /* Print version */
    printf ("srt %s\n", VERSION);
@@ -164,15 +186,29 @@ int main (void)
    screen.height = SCREEN_HEIGHT;
    screen.pos_z  = 200;   /* Must be in front of the camera which is at (0,0,0) */
 
-   /* Set sphere position and radius */
-   sphere.center.x = 0;
-   sphere.center.y = 0;
-   sphere.center.z = 600;   /* Must be in front of the camera which is at (0,0,0) */
-   sphere.radius   = 100;
-   sphere_set_color (&sphere, 255, 0, 0);
+   /* Set sphere #1 parameters */
+   sphere[0].center.x = 0;
+   sphere[0].center.y = 0;
+   sphere[0].center.z = 600;   /* Must be in front of the camera which is at (0,0,0) */
+   sphere[0].radius   = 100;
+   sphere_set_color (&sphere[0], 255, 0, 0);
+
+   /* Set sphere #2 parameters */
+   sphere[1].center.x = -200;
+   sphere[1].center.y = 0;
+   sphere[1].center.z = 900;   /* Must be in front of the camera */
+   sphere[1].radius   = 100;
+   sphere_set_color (&sphere[1], 0, 255, 0);
+
+   /* Set sphere #2 parameters */
+   sphere[2].center.x = 200;
+   sphere[2].center.y = 0;
+   sphere[2].center.z = 900;   /* Must be in front of the camera */
+   sphere[2].radius   = 100;
+   sphere_set_color (&sphere[2], 0, 0, 255);
 
    /* Render the scene */
-   if (render_scene (image, sizeof(image), &screen, &sphere))
+   if (render_scene (image, sizeof(image), &screen, sphere, 3))
    {
       printf ("error: an error occured when rendering the scene.\n");
    }

@@ -1,5 +1,5 @@
 #!/bin/sh
 
-VER=`git describe --tags`
+VER=`git describe --tags --dirty`
 
 echo "#define VERSION \"$VER\"" > version.h

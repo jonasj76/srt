@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>   /* memset() */
+#include <assert.h>
 #include "vector.h"
 #include "ray.h"
 #include "sphere.h"
@@ -56,11 +57,19 @@ typedef struct {
 #define SCREEN_WIDTH  640
 #define SCREEN_HEIGHT 480
 
-/* Buffer for the rendered image */
-uint8_t  image[SCREEN_WIDTH*SCREEN_HEIGHT*3];
+/* Number of spheres in scene */
+#define NUM_SPHERES 3
+
+/* Sphere objects */
+sphere_t sphere[NUM_SPHERES];
+
+/* Declare a pointer to a drawing surface if ssgl is used to draw the scene */
+#ifdef SSGL
+SDL_Surface *win;
+#endif
 
 /**
- * render_scence - Creates a rendered scene.
+ * render_scene - Creates a rendered scene.
  * @image:       Pointer to buffer which will contain the rendered scene.
  * @image_sz:    Size of @image buffer.
  * @screen:      Pointer to a screen plane object.
@@ -173,63 +182,85 @@ int render_scene (uint8_t* image, int image_sz, screen_t *screen, sphere_t *sphe
   return 0;
 }
 
-int main (void)
+/**
+ * setup_scene - Setup scene objects.
+ *
+ * This function will setup the scene objects, i.e initalize the parameters for
+ * each sphere used in the scene.
+ *
+ * Note:
+ * All z-coordinates for the spheres must be in front of the camera, which is
+ * at z-coordinate 0, i.e. any positive integer should be OK.
+ *
+ * Returns:
+ * none.
+ */
+void setup_scene (void)
 {
-   screen_t screen;      /* Screen plane  */
-   sphere_t sphere[3];   /* Sphere objects */
+   /* Clear the sphere struct */
+   memset (sphere, 0, sizeof(sphere));
 
-   /* Print version */
-   printf ("srt %s\n", VERSION);
-
-   /* Set screen plane dimension and position */
-   screen.width  = SCREEN_WIDTH;
-   screen.height = SCREEN_HEIGHT;
-   screen.pos_z  = 200;   /* Must be in front of the camera which is at (0,0,0) */
-
-   /* Set sphere #1 parameters */
+   /* Setup sphere 1 */
    sphere[0].center.x = 0;
    sphere[0].center.y = 0;
-   sphere[0].center.z = 600;   /* Must be in front of the camera which is at (0,0,0) */
+   sphere[0].center.z = 600;
    sphere[0].radius   = 100;
    sphere_set_color (&sphere[0], 255, 0, 0);
 
-   /* Set sphere #2 parameters */
+   /* Setup sphere 2 */
    sphere[1].center.x = -200;
    sphere[1].center.y = 0;
-   sphere[1].center.z = 900;   /* Must be in front of the camera */
+   sphere[1].center.z = 900;
    sphere[1].radius   = 100;
    sphere_set_color (&sphere[1], 0, 255, 0);
 
-   /* Set sphere #2 parameters */
+   /* Setup sphere 3 */
    sphere[2].center.x = 200;
    sphere[2].center.y = 0;
-   sphere[2].center.z = 900;   /* Must be in front of the camera */
+   sphere[2].center.z = 900;
    sphere[2].radius   = 100;
    sphere_set_color (&sphere[2], 0, 0, 255);
+}
 
-   /* Render the scene */
-   if (render_scene (image, sizeof(image), &screen, sphere, 3))
-   {
-      printf ("error: an error occured when rendering the scene.\n");
-   }
+#ifdef SSIL
+/**
+ * output_ssil - Rendered image output callback when using ssil.
+ * @image:  Pointer to rendered image buffer.
+ * @width:  Width of renderd image.
+ * @height: Height of rendered image.
+ *
+ * This function will be used is ssil is used.
+ * The function will save the rendered image as a .tga image.
 
-#ifdef SSIL   /* Use ssil to save the scene as a .tga image */
-   tga_write ("srt.tga", SCREEN_WIDTH, SCREEN_HEIGHT, image);
+ * Returns:
+ * POSIX OK (zero) or non-zero on error.
+ */
+int output_ssil (uint8_t *image, int width, int height)
+{
+   tga_write ("srt.tga", width, height, image);
    printf ("srt.tga was written.\n");
 
    return 0;
+}
 #endif
 
-#ifdef SSGL   /* Use ssgl to draw the scene */
-   SDL_Surface *win;   /* Pointer to drawing surface */
-   int x, y;           /* Loop variables for drawing surface coordinates */
-   int k;              /* Offset in rendered image buffer */
-
-   /* Create a drawing surface */
-   win = screen_create (SCREEN_WIDTH, SCREEN_HEIGHT);
-
-   if (!win)
-      return 1;
+#ifdef SSGL
+/**
+ * output_ssil - Rendered image output callback when using ssgl.
+ * @image:  Pointer to rendered image buffer.
+ * @width:  Width of renderd image.
+ * @height: Height of rendered image.
+ *
+ * This function will be used is ssgl is used.
+ * The function will use ssgl to draw the image in a window.
+ *
+ * Returns:
+ * POSIX OK (zero) or non-zero on error.
+ */
+int ssgl (uint8_t *image, int width, int height)
+{
+   int x, y;   /* Loop variables for drawing surface coordinates */
+   int k;      /* Offset in rendered image buffer */
 
    /* Lock the surface for directly access */
    if (screen_lock (win))
@@ -237,16 +268,18 @@ int main (void)
 
    /* Put the pixels */
    k = 0;
-   for (y=0; y<SCREEN_HEIGHT; y++)
-      for (x=0; x<SCREEN_WIDTH; x++)
+   for (y = 0; y < height; y++)
+   {
+      for (x = 0; x < width; x++)
       {
          int r,g,b;
          r = image[k+0];
          g = image[k+1];
          b = image[k+2];
-         putpixel(win, x, y, (r<<16) | (g<<8) | b);
+         putpixel (win, x, y, (r<<16) | (g<<8) | b);
          k += 3;
       }
+   }
 
    /* Unlock surface */
    screen_unlock (win);
@@ -270,11 +303,83 @@ int main (void)
    }
 
    return 0;
+}
 #endif
 
-   printf ("note: No visual output was written.\n");
-   printf ("      Use ssil, ssgl or write your own code.\n");
-   printf ("      See README and Makefile for more information.\n");
+/**
+ * render_output_setup - Seyup render output.
+ * @cb: Pointer to a render output function.
+ *
+ * This function will initialize and setup all neccessary data for handling
+ * the rendered output image. A callback function, @cb, will be set, which will
+ * be called when the rendering is finihed to e.g. display the image.
+ *
+ * Returns:
+ * POSIX OK (zero) or non-zero on error.
+ */
+int render_output_setup (int (**cb)())
+{
+#ifdef SSIL
+   *cb = output_ssil;
+
+   return 0;
+#endif
+
+#ifdef SSGL
+   /* Open a window and create a drawing surface */
+   win = screen_create (SCREEN_WIDTH, SCREEN_HEIGHT);
+
+   if (!win)
+      return 1;
+
+   *cb = ssgl;
+
+   return 0;
+#endif
+
+   *cb = NULL;
+   /* error, no method selected */
+   return 1;
+}
+
+int main (void)
+{
+   screen_t screen;                                      /* Screen plane */
+   uint8_t  image[SCREEN_WIDTH*SCREEN_HEIGHT*3];         /* Buffer for the rendered image */
+   int (*render_output_cb)(uint8_t*, int, int) = NULL;   /* Rendering putput callback */
+
+   /* Print version */
+   printf ("srt %s\n", VERSION);
+
+   /* Set screen plane dimension and position */
+   screen.width  = SCREEN_WIDTH;
+   screen.height = SCREEN_HEIGHT;
+   screen.pos_z  = 200;   /* Must be in front of the camera which is at (0,0,0) */
+
+   /* Setup sceene */
+   setup_scene ();
+
+   /* Init render output function */
+   render_output_setup (&render_output_cb);
+   if (!render_output_cb)
+   {
+      printf ("error: No rendering output method was selected.\n");
+      printf ("       Use ssil, ssgl or write your own code.\n");
+      printf ("       See README and Makefile for more information.\n");
+
+      return 1;
+   }
+
+   /* Render the scene */
+   if (render_scene (image, sizeof(image), &screen, sphere, NUM_SPHERES))
+   {
+      printf ("warning: an error occured when rendering the scene.\n");
+   }
+
+   if (render_output_cb (image, SCREEN_WIDTH, SCREEN_HEIGHT))
+   {
+      printf ("warning: an error occured when calling the rendering output function.\n");
+   }
 
    return 0;
 }

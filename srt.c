@@ -97,89 +97,89 @@ int render_scene (uint8_t* image, int image_sz, screen_t *screen, sphere_t *sphe
    int x, y;        /* Loop variables for each pixel on the screen plane */
    int image_ofs;   /* Offset in the rendered image, i.e. pointer to next pixel */
 
-  /* Clear whole image buffer to set black as default background color */
-  memset (image, 0, image_sz);
+   /* Clear whole image buffer to set black as default background color */
+   memset (image, 0, image_sz);
 
-  /* Set starting point for the ray to the camera position (0,0,0) */
-  ray.origin.x = 0;
-  ray.origin.y = 0;
-  ray.origin.z = 0;
+   /* Set starting point for the ray to the camera position (0,0,0) */
+   ray.origin.x = 0;
+   ray.origin.y = 0;
+   ray.origin.z = 0;
 
-  /* Reset image offset pointer */
-  image_ofs = 0;
+   /* Reset image offset pointer */
+   image_ofs = 0;
 
-  /* Create directions for each ray, i.e. from the camera/ray origin (0,0,0) to
-   * each pixel on the screen. Then test if the ray hits this sphere and set the
-   * pixel to the color of the sphere object, or leave the pixel untouched if
-   * no intersection was detected. */
-  for (y = 0; y < screen->height; y++)
-  {
-    for (x = 0; x < screen->width; x++)
-    {
-       int i;
-       int closest_sphere = -1;   /* Array ID of closests sphere, -1 no sphere was hit by the ray */
-       float min_dist = 100000;   /* Distance from camera/ray origin (0,0,0) to the closests sphere. Start value is set so high that if a sphere was hit it should definitely be closer than this value */
-       float dist;                /* Distance from camera/ray origin (0,0,0) to the sphere */
+   /* Create directions for each ray, i.e. from the camera/ray origin (0,0,0) to
+    * each pixel on the screen. Then test if the ray hits this sphere and set the
+    * pixel to the color of the sphere object, or leave the pixel untouched if
+    * no intersection was detected. */
+   for (y = 0; y < screen->height; y++)
+   {
+      for (x = 0; x < screen->width; x++)
+      {
+         int i;
+         int closest_sphere = -1;   /* Array ID of closests sphere, -1 no sphere was hit by the ray */
+         float min_dist = 100000;   /* Distance from camera/ray origin (0,0,0) to the closests sphere. Start value is set so high that if a sphere was hit it should definitely be closer than this value */
+         float dist;                /* Distance from camera/ray origin (0,0,0) to the sphere */
 
-       /* Set the ray direction. The x,y center of the screen will be at (0,0),
-        * i.e. the same x,y coordinates as the center of the camera. The
-        * x-direction can therefore be calculated as the different between the
-        * x-coordinate for the current pixel and the center of the screen, i.e.
-        * half the screen width. The y-direction can be calculated in the same
-        * way, i.e. y - height/2. */
-       ray.dir.x = x - (screen->width  / 2);
-       ray.dir.y = y - (screen->height / 2);
-       ray.dir.z = screen->pos_z;
+         /* Set the ray direction. The x,y center of the screen will be at (0,0),
+          * i.e. the same x,y coordinates as the center of the camera. The
+          * x-direction can therefore be calculated as the different between the
+          * x-coordinate for the current pixel and the center of the screen, i.e.
+          * half the screen width. The y-direction can be calculated in the same
+          * way, i.e. y - height/2. */
+         ray.dir.x = x - (screen->width  / 2);
+         ray.dir.y = y - (screen->height / 2);
+         ray.dir.z = screen->pos_z;
 
-       /* Normalize the direction (a must for the intersection test) */
-       vector_normal (&ray.dir);
+         /* Normalize the direction (a must for the intersection test) */
+         vector_normal (&ray.dir);
 
-       /* Loop through all spheres and check which one is the closest to the camera. */
-       for (i = 0; i < num_spheres; i++)
-       {
-          sphere_t *sphere = &sphere_list[i];   /* Current sphere to check */
+         /* Loop through all spheres and check which one is the closest to the camera. */
+         for (i = 0; i < num_spheres; i++)
+         {
+            sphere_t *sphere = &sphere_list[i];   /* Current sphere to check */
 
-          /* Get distance from camera/ray origin to sphere, i.e. test if the
-           * ray hits the sphere by checking if the returned distance is
-           * greater than zero */
-          dist = sphere_intersect (sphere, &ray);
+            /* Get distance from camera/ray origin to sphere, i.e. test if the
+             * ray hits the sphere by checking if the returned distance is
+             * greater than zero */
+            dist = sphere_intersect (sphere, &ray);
 
-          /* Record the current sphere if it was intersected by the ray and closer to the camera than any previous hit sphere. */
-          if (dist > 0.0)
-          {
-             if (dist < min_dist)
-             {
-                min_dist       = dist;
-                closest_sphere = i;
-             }
-          }
-       }
+            /* Record the current sphere if it was intersected by the ray and closer to the camera than any previous hit sphere. */
+            if (dist > 0.0)
+            {
+               if (dist < min_dist)
+               {
+                  min_dist       = dist;
+                  closest_sphere = i;
+               }
+            }
+         }
 
-       /* If a sphere was intersected by the ray, set the pixel to the color
-        * of the sphere object, else leave the pixel untouched, i.e. keep the
-        * background color */
-       if (closest_sphere != -1)
-       {
-          sphere_t *sphere = &sphere_list[closest_sphere];
-          int r, g, b;
+         /* If a sphere was intersected by the ray, set the pixel to the color
+          * of the sphere object, else leave the pixel untouched, i.e. keep the
+          * background color */
+         if (closest_sphere != -1)
+         {
+            sphere_t *sphere = &sphere_list[closest_sphere];
+            int r, g, b;
 
-          /* Check that new offset isn't pointing outside the image buffer */
-          if (image_ofs >= (image_sz))
-             return 1;
+            /* Check that new offset isn't pointing outside the image buffer */
+            if (image_ofs >= (image_sz))
+               return 1;
 
-          sphere_get_color (sphere, &r, &g, &b);
+            sphere_get_color (sphere, &r, &g, &b);
 
-          image[image_ofs + 0] = r;
-          image[image_ofs + 1] = g;
-          image[image_ofs + 2] = b;
-       }
+            image[image_ofs + 0] = r;
+            image[image_ofs + 1] = g;
+            image[image_ofs + 2] = b;
+         }
 
-      /* Update image offset */
-      image_ofs += 3;
-    }
-  }
+         /* Update image offset */
+         image_ofs += 3;
+      }
+   }
 
-  return 0;
+   return 0;
 }
 
 /**

@@ -17,7 +17,7 @@ CPPFLAGS = -I $(ROOTDIR)/include
 RM       = rm -f
 
 OBJS     = src/vector.o src/sphere.o
-LIBS     = -lm
+LIBS     = -lm -lreadline
 
 PATH	:= $(PATH):$(ROOTDIR)
 

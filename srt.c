@@ -27,6 +27,8 @@
 #include <stdint.h>
 #include <string.h>   /* memset() */
 #include <assert.h>
+#include <readline/readline.h>
+#include <readline/history.h>
 #include "vector.h"
 #include "ray.h"
 #include "sphere.h"
@@ -62,11 +64,6 @@ typedef struct {
 
 /* Sphere objects */
 sphere_t sphere[NUM_SPHERES];
-
-/* Declare a pointer to a drawing surface if ssgl is used to draw the scene */
-#ifdef SSGL
-SDL_Surface *win;
-#endif
 
 /**
  * render_scene - Creates a rendered scene.
@@ -246,7 +243,7 @@ int output_ssil (uint8_t *image, int width, int height)
 
 #ifdef SSGL
 /**
- * output_ssil - Rendered image output callback when using ssgl.
+ * output_ssgl - Rendered image output callback when using ssgl.
  * @image:  Pointer to rendered image buffer.
  * @width:  Width of renderd image.
  * @height: Height of rendered image.
@@ -259,8 +256,15 @@ int output_ssil (uint8_t *image, int width, int height)
  */
 int ssgl (uint8_t *image, int width, int height)
 {
-   int x, y;   /* Loop variables for drawing surface coordinates */
-   int k;      /* Offset in rendered image buffer */
+   SDL_Surface *win; /* Pointer to the drawing surface */
+   int x, y;         /* Loop variables for drawing surface coordinates */
+   int k;            /* Offset in rendered image buffer */
+
+   /* Open a window and create a drawing surface */
+   win = screen_create (SCREEN_WIDTH, SCREEN_HEIGHT);
+
+   if (!win)
+      return 1;
 
    /* Lock the surface for directly access */
    if (screen_lock (win))
@@ -297,11 +301,13 @@ int ssgl (uint8_t *image, int width, int height)
          switch (event.type)
          {
             case SDL_QUIT:
+               SDL_Quit ();
                return 0;
          }
       }
    }
 
+   SDL_Quit ();
    return 0;
 }
 #endif
@@ -326,19 +332,14 @@ int render_output_setup (int (**cb)())
 #endif
 
 #ifdef SSGL
-   /* Open a window and create a drawing surface */
-   win = screen_create (SCREEN_WIDTH, SCREEN_HEIGHT);
-
-   if (!win)
-      return 1;
-
    *cb = ssgl;
 
    return 0;
 #endif
 
-   *cb = NULL;
    /* error, no method selected */
+   *cb = NULL;
+
    return 1;
 }
 
@@ -347,16 +348,21 @@ int main (void)
    screen_t screen;                                      /* Screen plane */
    uint8_t  image[SCREEN_WIDTH*SCREEN_HEIGHT*3];         /* Buffer for the rendered image */
    int (*render_output_cb)(uint8_t*, int, int) = NULL;   /* Rendering putput callback */
+   char* cmd;
+   int quit = 0;
 
    /* Print version */
    printf ("srt %s\n", VERSION);
+
+   /* Clear rendered image buffer */
+   memset (image, 0, sizeof(image));
 
    /* Set screen plane dimension and position */
    screen.width  = SCREEN_WIDTH;
    screen.height = SCREEN_HEIGHT;
    screen.pos_z  = 200;   /* Must be in front of the camera which is at (0,0,0) */
 
-   /* Setup sceene */
+   /* Setup scene */
    setup_scene ();
 
    /* Init render output function */
@@ -370,15 +376,42 @@ int main (void)
       return 1;
    }
 
-   /* Render the scene */
-   if (render_scene (image, sizeof(image), &screen, sphere, NUM_SPHERES))
+   /* Enter CLI */
+   printf ("Enter 'help' for available commands.\n");
+   while (!quit)
    {
-      printf ("warning: an error occured when rendering the scene.\n");
-   }
+      cmd = readline("> ");
 
-   if (render_output_cb (image, SCREEN_WIDTH, SCREEN_HEIGHT))
-   {
-      printf ("warning: an error occured when calling the rendering output function.\n");
+      if (!strcmp (cmd, "render"))
+      {
+         /* Render the scene */
+         if (render_scene (image, sizeof(image), &screen, sphere, NUM_SPHERES))
+            printf ("An error occured when rendering the scene.\n");
+      }
+      else
+      if (!strcmp (cmd, "output"))
+      {
+         if (render_output_cb (image, SCREEN_WIDTH, SCREEN_HEIGHT))
+            printf ("An error occured when calling the rendering output function.\n");
+      }
+      else
+      if (!strcmp (cmd, "help"))
+      {
+         printf ("render"  "\tRender scene.\n");
+         printf ("output"  "\tSend the rendered scene to output function.\n");
+         printf ("help"    "\tShow this help text.\n");
+         printf ("quit"    "\tQuit.\n");
+      }
+      else
+      if (!strcmp (cmd, "quit"))
+      {
+         quit = 1;
+      }
+      else
+      {
+         if (strlen (cmd))
+            printf ("Unknown command\n");
+      }
    }
 
    return 0;

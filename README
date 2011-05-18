@@ -26,3 +26,8 @@ Building
 --------
 Building srt is as simple as:
    make
+
+Library dependencies
+--------------------
+- GNU C library, http://www.gnu.org/s/libc/
+- GNU Readline library, http://tiswww.case.edu/php/chet/readline/rltop.html

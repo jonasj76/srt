@@ -343,12 +343,159 @@ int render_output_setup (int (**cb)())
    return 1;
 }
 
+char* cli_pop_token (char* line)
+{
+   return strtok (line, " ");
+}
+
+void cli_enter_sphere (int id)
+{
+   char prompt[32];
+   char* line;
+   char* token;
+   int end = 0;
+   int i;
+   int param[3]; /* x, y, z or r, g, b */
+
+   snprintf (prompt, sizeof(prompt), "scene/sphere-%d> ", id);
+
+   while (!end)
+   {
+      line = readline(prompt);
+
+      token = cli_pop_token (line);
+
+      if (!token)
+         continue;
+
+      if (!strcmp (token, "center"))
+      {
+         for (i=0; i<3; i++)
+         {
+            token = cli_pop_token (NULL);
+            if (!token)
+               continue;
+            param[i] = strtol (token, NULL, 10);
+         }
+         sphere[id].center.x = param[0];
+         sphere[id].center.y = param[1];
+         sphere[id].center.z = param[2];
+      }
+      else
+      if (!strcmp (token, "radius"))
+      {
+         token = cli_pop_token (NULL);
+         if (!token)
+            continue;
+         sphere[id].radius = strtol (token, NULL, 10);
+      }
+      else
+      if (!strcmp (token, "color"))
+      {
+         for (i=0; i<3; i++)
+         {
+            token = cli_pop_token (NULL);
+            if (!token)
+               continue;
+            param[i] = strtol (token, NULL, 10);
+         }
+         sphere_set_color (&sphere[id], param[0], param[1], param[2]);
+      }
+      else
+      if (!strcmp (token, "show"))
+      {
+         printf ("x:%.0f, y:%.0f, z:%.0f\n", sphere[id].center.x, sphere[id].center.y, sphere[id].center.z);
+         printf ("radius: %.0f\n", sphere[id].radius);
+         printf ("r:%d, g:%d, b:%d\n", sphere[id].r, sphere[id].g, sphere[id].b);
+      }
+      else
+      if (!strcmp (token, "help"))
+      {
+         printf ("center <X> <Y> <Z>"  "\tSphere center coordinates.\n");
+         printf ("radius <R>"          "\t\tSphere radius\n");
+         printf ("color <R> <G> <B>"   "\tSphere color\n");
+         printf ("show"                "\t\t\tShow sphere settings.\n");
+         printf ("help"                "\t\t\tShow this help text.\n");
+         printf ("end"                 "\t\t\tExit context.\n");
+      }
+      else
+      if (!strcmp (token, "end"))
+      {
+         return;
+      }
+      else
+      {
+         if (strlen (token))
+            printf ("Unknown command\n");
+      }
+   }
+}
+
+void cli_enter_scene (void)
+{
+   char* line;
+   char* token;
+   int end = 0;
+
+   while (!end)
+   {
+      line = readline("scene> ");
+
+      token = cli_pop_token (line);
+
+      if (!token)
+         continue;
+
+      if (!strcmp (token, "sphere"))
+      {
+         int id;
+
+         token = cli_pop_token (NULL);
+         if (!token)
+         {
+            printf ("Missing sphere ID.\n");
+            continue;
+         }
+
+         id = strtol (token, NULL, 10);
+         if (id >=0  && id < NUM_SPHERES)
+         {
+            printf ("Entering sphere context\n");
+            cli_enter_sphere (id);
+         }
+         else
+         {
+            printf ("Invalid ID, must be between 0 and %d\n", NUM_SPHERES);
+         }
+      }
+      else
+      if (!strcmp (token, "help"))
+      {
+         printf ("sphere <ID>"  "\tSetup sphere object.\n");
+         printf (               "\t\t<ID> sphere identity, 0-%d.\n", NUM_SPHERES);
+         printf ("help"         "\t\tShow this help text.\n");
+         printf ("end"          "\t\tExit context.\n");
+      }
+      else
+      if (!strcmp (token, "end"))
+      {
+         return;
+      }
+      else
+      {
+         if (strlen (token))
+            printf ("Unknown command\n");
+      }
+   }
+}
+
 int main (void)
 {
    screen_t screen;                                      /* Screen plane */
    uint8_t  image[SCREEN_WIDTH*SCREEN_HEIGHT*3];         /* Buffer for the rendered image */
    int (*render_output_cb)(uint8_t*, int, int) = NULL;   /* Rendering putput callback */
-   char* cmd;
+   char* line;
+   char* token;
    int quit = 0;
 
    /* Print version */
@@ -380,36 +527,50 @@ int main (void)
    printf ("Enter 'help' for available commands.\n");
    while (!quit)
    {
-      cmd = readline("> ");
+      line = readline("> ");
 
-      if (!strcmp (cmd, "render"))
+      token = cli_pop_token (line);
+
+      if (!token)
+         continue;
+
+      if (!strcmp (token, "scene"))
       {
+         printf ("Entering scene context\n");
+         cli_enter_scene ();
+      }
+      else
+      if (!strcmp (token, "render"))
+      {
+         printf ("Rendering scene\n");
          /* Render the scene */
          if (render_scene (image, sizeof(image), &screen, sphere, NUM_SPHERES))
             printf ("An error occured when rendering the scene.\n");
       }
       else
-      if (!strcmp (cmd, "output"))
+      if (!strcmp (token, "output"))
       {
+         printf ("Calling rendering output function\n");
          if (render_output_cb (image, SCREEN_WIDTH, SCREEN_HEIGHT))
             printf ("An error occured when calling the rendering output function.\n");
       }
       else
-      if (!strcmp (cmd, "help"))
+      if (!strcmp (token, "help"))
       {
+         printf ("scene"   "\tEnter scene context.\n");
          printf ("render"  "\tRender scene.\n");
          printf ("output"  "\tSend the rendered scene to output function.\n");
          printf ("help"    "\tShow this help text.\n");
          printf ("quit"    "\tQuit.\n");
       }
       else
-      if (!strcmp (cmd, "quit"))
+      if (!strcmp (token, "quit"))
       {
          quit = 1;
       }
       else
       {
-         if (strlen (cmd))
+         if (strlen (token))
             printf ("Unknown command\n");
       }
    }

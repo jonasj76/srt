@@ -23,10 +23,11 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <stdio.h>
-#include <stdint.h>
-#include <string.h>   /* memset() */
 #include <assert.h>
+#include <math.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 #include "vector.h"
@@ -42,19 +43,6 @@
 #endif
 #include "version.h"
 
-/* Screen plane object.
- * A screen plane is a rectangle in the scene representing the visual screen.
- * In this simple ray tracer it is centered at the origin. The z position
- * can though be modified. If the plane is moved away from the camera, the
- * ray tracing beams becomes narrower and the objects will appear bigger on
- * the screen.
- */
-typedef struct {
-   int width;
-   int height;
-   int pos_z;
-} screen_t;
-
 /* Screen plane and rendered scene dimensions */
 #define SCREEN_WIDTH  640
 #define SCREEN_HEIGHT 480
@@ -67,28 +55,36 @@ sphere_t sphere[NUM_SPHERES];
 
 /**
  * render_scene - Creates a rendered scene.
- * @image:       Pointer to buffer which will contain the rendered scene.
- * @image_sz:    Size of @image buffer.
- * @screen:      Pointer to a screen plane object.
- * @sphere_list: Pointer to a list of sphere object.
- * @num_spheres: Num of spheres in @sphere_list.
+ * @image:         Pointer to buffer which will contain the rendered scene.
+ * @image_sz:      Size of @image buffer.
+ * @screen_width:  Width of rendered screen.
+ * @screen_height: Height of rendered screen.
+ * @cam:           Camera object.
+ * @screen:        Pointer to a screen plane object.
+ * @sphere_list:   Pointer to a list of sphere object.
+ * @num_spheres:   Num of spheres in @sphere_list.
  *
  * This function will create a rendered scene. The output is written to @output
  * and is stored as an array of pixels, starting with the pixel at the lower
  * left corner and then continuing with increasing x value. Each pixel is
  * stored in three bytes starting a value for the the red component followed by
  * the green and then the blue.
- * For each pixel on the screen, @screen, a ray from the camera through that
- * pixel is generated. For each sphere in @sphere_list, a check is made to
- * see if the object was hit. The closest object to the camera which was hit
- * is recorded the color of the pixel will be set to color of that object. If
- * the ray doesn't hit any object, no pixel color is set, i.e. the default
- * background color (black) will remain.
+ * A ray from the camera, @cam, through each pixel is generated. For each
+ * sphere in @sphere_list, a check is made to see if the object was hit. The
+ * closest object to the camera which was hit is recorded and the color of the
+ * pixel will be set to color of that object. If the ray doesn't hit any object,
+ * no pixel color is set, i.e. the default background color (black) will remain.
  *
  * Returns:
  * POSIX OK (zero) or non-zero on error.
  */
-int render_scene (uint8_t* image, int image_sz, screen_t *screen, sphere_t *sphere_list, int num_spheres)
+int render_scene (uint8_t* image,
+                  int image_sz,
+                  int screen_width,
+                  int screen_height,
+                  vector_t *cam,
+                  sphere_t *sphere_list,
+                  int num_spheres)
 {
    ray_t ray;       /* The ray that will be used to trace through every pixel of the screen plane */
    int x, y;        /* Loop variables for each pixel on the screen plane */
@@ -97,10 +93,10 @@ int render_scene (uint8_t* image, int image_sz, screen_t *screen, sphere_t *sphe
    /* Clear whole image buffer to set black as default background color */
    memset (image, 0, image_sz);
 
-   /* Set starting point for the ray to the camera position (0,0,0) */
-   ray.origin.x = 0;
-   ray.origin.y = 0;
-   ray.origin.z = 0;
+   /* Set starting point for the ray to the camera position */
+   ray.origin.x = cam->x;
+   ray.origin.y = cam->y;
+   ray.origin.z = cam->z;
 
    /* Reset image offset pointer */
    image_ofs = 0;
@@ -109,24 +105,29 @@ int render_scene (uint8_t* image, int image_sz, screen_t *screen, sphere_t *sphe
     * each pixel on the screen. Then test if the ray hits this sphere and set the
     * pixel to the color of the sphere object, or leave the pixel untouched if
     * no intersection was detected. */
-   for (y = 0; y < screen->height; y++)
+   for (y = 0; y < screen_height; y++)
    {
-      for (x = 0; x < screen->width; x++)
+      for (x = 0; x < screen_width; x++)
       {
          int i;
          int closest_sphere = -1;   /* Array ID of closests sphere, -1 no sphere was hit by the ray */
          float min_dist = 100000;   /* Distance from camera/ray origin (0,0,0) to the closests sphere. Start value is set so high that if a sphere was hit it should definitely be closer than this value */
          float dist;                /* Distance from camera/ray origin (0,0,0) to the sphere */
+         float fov_x = 3.14/4.0;    /* 45 degree */
+         float fov_y = fov_x * screen_height/screen_width;   /* 45 degree with aspect ratio correction */
 
-         /* Set the ray direction. The x,y center of the screen will be at (0,0),
-          * i.e. the same x,y coordinates as the center of the camera. The
-          * x-direction can therefore be calculated as the different between the
-          * x-coordinate for the current pixel and the center of the screen, i.e.
-          * half the screen width. The y-direction can be calculated in the same
-          * way, i.e. y - height/2. */
-         ray.dir.x = x - (screen->width  / 2);
-         ray.dir.y = y - (screen->height / 2);
-         ray.dir.z = screen->pos_z;
+         /* Set the ray direction. The ray will start att the camera position
+          * and travel in a angle which at maximum is the field of view (fov)
+          * value. I.e. if fov is set to 45 degree, the direction will be from
+          * -45 to +45 degree from the camera center. The direction is for both
+          * x and y directions, but the y value is corrected by a aspect ratio,
+          * which will make a sphere look like a circle instead of an elipse on
+          * a not 1:1 screen width to height mapping.
+          * The camera will be looking along the negative z-axis. */
+
+         ray.dir.x = tan (fov_x) * (2*x - screen_width)  / screen_width;
+         ray.dir.y = tan (fov_y) * (2*y - screen_height) / screen_height;
+         ray.dir.z = -1;
 
          /* Normalize the direction (a must for the intersection test) */
          vector_normal (&ray.dir);
@@ -141,7 +142,8 @@ int render_scene (uint8_t* image, int image_sz, screen_t *screen, sphere_t *sphe
              * greater than zero */
             dist = sphere_intersect (sphere, &ray);
 
-            /* Record the current sphere if it was intersected by the ray and closer to the camera than any previous hit sphere. */
+            /* Record the current sphere if it was intersected by the ray and
+             * closer to the camera than any previous hit sphere. */
             if (dist > 0.0)
             {
                if (dist < min_dist)
@@ -187,7 +189,7 @@ int render_scene (uint8_t* image, int image_sz, screen_t *screen, sphere_t *sphe
  *
  * Note:
  * All z-coordinates for the spheres must be in front of the camera, which is
- * at z-coordinate 0, i.e. any positive integer should be OK.
+ * at z-coordinate 0, i.e. any negative value should be OK.
  *
  * Returns:
  * none.
@@ -200,21 +202,21 @@ void setup_scene (void)
    /* Setup sphere 1 */
    sphere[0].center.x = 0;
    sphere[0].center.y = 0;
-   sphere[0].center.z = 600;
+   sphere[0].center.z = -600;
    sphere[0].radius   = 100;
    sphere_set_color (&sphere[0], 255, 0, 0);
 
    /* Setup sphere 2 */
    sphere[1].center.x = -200;
    sphere[1].center.y = 0;
-   sphere[1].center.z = 900;
+   sphere[1].center.z = -900;
    sphere[1].radius   = 100;
    sphere_set_color (&sphere[1], 0, 255, 0);
 
    /* Setup sphere 3 */
    sphere[2].center.x = 200;
    sphere[2].center.y = 0;
-   sphere[2].center.z = 900;
+   sphere[2].center.z = -900;
    sphere[2].radius   = 100;
    sphere_set_color (&sphere[2], 0, 0, 255);
 }
@@ -491,7 +493,7 @@ void cli_enter_scene (void)
 
 int main (void)
 {
-   screen_t screen;                                      /* Screen plane */
+   vector_t cam;
    uint8_t  image[SCREEN_WIDTH*SCREEN_HEIGHT*3];         /* Buffer for the rendered image */
    int (*render_output_cb)(uint8_t*, int, int) = NULL;   /* Rendering putput callback */
    char* line;
@@ -504,10 +506,10 @@ int main (void)
    /* Clear rendered image buffer */
    memset (image, 0, sizeof(image));
 
-   /* Set screen plane dimension and position */
-   screen.width  = SCREEN_WIDTH;
-   screen.height = SCREEN_HEIGHT;
-   screen.pos_z  = 200;   /* Must be in front of the camera which is at (0,0,0) */
+   /* Set camera position */
+   cam.x = 0;
+   cam.y = 0;
+   cam.z = 0;
 
    /* Setup scene */
    setup_scene ();
@@ -544,7 +546,7 @@ int main (void)
       {
          printf ("Rendering scene\n");
          /* Render the scene */
-         if (render_scene (image, sizeof(image), &screen, sphere, NUM_SPHERES))
+         if (render_scene (image, sizeof(image), SCREEN_WIDTH, SCREEN_HEIGHT, &cam, sphere, NUM_SPHERES))
             printf ("An error occured when rendering the scene.\n");
       }
       else

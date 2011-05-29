@@ -1,4 +1,4 @@
-OBJS = vector.o sphere.o
+OBJS = vector.o sphere.o render.o scene.o output.o cli.o
 
 SRCS = $(OBJS:.o=.c)
 DEPS = $(addprefix .,$(OBJS:.o=.d))

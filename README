@@ -1,8 +1,8 @@
 Simple Ray Tracer
 =================
 
-srt is a simple ray tracer. Currently it only support rendering spheres with
-a single color, but more is about to come.
+"srt" is a simple ray tracer. Currently it only support rendering a scene
+containing only spheres. The scene is setup using a CLI.
 
 Configuration
 -------------

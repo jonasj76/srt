@@ -16,7 +16,7 @@ CFLAGS   = -std=gnu99 -Wall -Wextra -Werror
 CPPFLAGS = -I $(ROOTDIR)/include
 RM       = rm -f
 
-OBJS     = src/vector.o src/sphere.o
+OBJS     = src/vector.o src/sphere.o src/scene.o src/render.o src/output.o src/cli.o
 LIBS     = -lm -lreadline
 
 PATH	:= $(PATH):$(ROOTDIR)

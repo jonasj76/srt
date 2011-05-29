@@ -23,203 +23,21 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <assert.h>
-#include <math.h>
 #include <stdint.h>
-#include <stdio.h>
-#include <string.h>
-#include <readline/readline.h>
-#include <readline/history.h>
-#include "vector.h"
-#include "ray.h"
-#include "sphere.h"
+
+#include "output.h"
+#include "cli.h"
+#include "version.h"
+
 #ifdef SSIL
 #include "tga.h"
 #endif
+
 #ifdef SSGL
 #include <SDL/SDL.h>
 #include "screen.h"
 #include "draw.h"
 #endif
-#include "version.h"
-
-/* Screen plane and rendered scene dimensions */
-#define SCREEN_WIDTH  640
-#define SCREEN_HEIGHT 480
-
-/* Number of spheres in scene */
-#define NUM_SPHERES 3
-
-/* Sphere objects */
-sphere_t sphere[NUM_SPHERES];
-
-/**
- * render_scene - Creates a rendered scene.
- * @image:         Pointer to buffer which will contain the rendered scene.
- * @image_sz:      Size of @image buffer.
- * @screen_width:  Width of rendered screen.
- * @screen_height: Height of rendered screen.
- * @cam:           Camera object.
- * @screen:        Pointer to a screen plane object.
- * @sphere_list:   Pointer to a list of sphere object.
- * @num_spheres:   Num of spheres in @sphere_list.
- *
- * This function will create a rendered scene. The output is written to @output
- * and is stored as an array of pixels, starting with the pixel at the lower
- * left corner and then continuing with increasing x value. Each pixel is
- * stored in three bytes starting a value for the the red component followed by
- * the green and then the blue.
- * A ray from the camera, @cam, through each pixel is generated. For each
- * sphere in @sphere_list, a check is made to see if the object was hit. The
- * closest object to the camera which was hit is recorded and the color of the
- * pixel will be set to color of that object. If the ray doesn't hit any object,
- * no pixel color is set, i.e. the default background color (black) will remain.
- *
- * Returns:
- * POSIX OK (zero) or non-zero on error.
- */
-int render_scene (uint8_t* image,
-                  int image_sz,
-                  int screen_width,
-                  int screen_height,
-                  vector_t *cam,
-                  sphere_t *sphere_list,
-                  int num_spheres)
-{
-   ray_t ray;       /* The ray that will be used to trace through every pixel of the screen plane */
-   int x, y;        /* Loop variables for each pixel on the screen plane */
-   int image_ofs;   /* Offset in the rendered image, i.e. pointer to next pixel */
-
-   /* Clear whole image buffer to set black as default background color */
-   memset (image, 0, image_sz);
-
-   /* Set starting point for the ray to the camera position */
-   ray.origin.x = cam->x;
-   ray.origin.y = cam->y;
-   ray.origin.z = cam->z;
-
-   /* Reset image offset pointer */
-   image_ofs = 0;
-
-   /* Create directions for each ray, i.e. from the camera/ray origin (0,0,0) to
-    * each pixel on the screen. Then test if the ray hits this sphere and set the
-    * pixel to the color of the sphere object, or leave the pixel untouched if
-    * no intersection was detected. */
-   for (y = 0; y < screen_height; y++)
-   {
-      for (x = 0; x < screen_width; x++)
-      {
-         int i;
-         int closest_sphere = -1;   /* Array ID of closests sphere, -1 no sphere was hit by the ray */
-         float min_dist = 100000;   /* Distance from camera/ray origin (0,0,0) to the closests sphere. Start value is set so high that if a sphere was hit it should definitely be closer than this value */
-         float dist;                /* Distance from camera/ray origin (0,0,0) to the sphere */
-         float fov_x = 3.14/4.0;    /* 45 degree */
-         float fov_y = fov_x * screen_height/screen_width;   /* 45 degree with aspect ratio correction */
-
-         /* Set the ray direction. The ray will start att the camera position
-          * and travel in a angle which at maximum is the field of view (fov)
-          * value. I.e. if fov is set to 45 degree, the direction will be from
-          * -45 to +45 degree from the camera center. The direction is for both
-          * x and y directions, but the y value is corrected by a aspect ratio,
-          * which will make a sphere look like a circle instead of an elipse on
-          * a not 1:1 screen width to height mapping.
-          * The camera will be looking along the negative z-axis. */
-
-         ray.dir.x = tan (fov_x) * (2*x - screen_width)  / screen_width;
-         ray.dir.y = tan (fov_y) * (2*y - screen_height) / screen_height;
-         ray.dir.z = -1;
-
-         /* Normalize the direction (a must for the intersection test) */
-         vector_normal (&ray.dir);
-
-         /* Loop through all spheres and check which one is the closest to the camera. */
-         for (i = 0; i < num_spheres; i++)
-         {
-            sphere_t *sphere = &sphere_list[i];   /* Current sphere to check */
-
-            /* Get distance from camera/ray origin to sphere, i.e. test if the
-             * ray hits the sphere by checking if the returned distance is
-             * greater than zero */
-            dist = sphere_intersect (sphere, &ray);
-
-            /* Record the current sphere if it was intersected by the ray and
-             * closer to the camera than any previous hit sphere. */
-            if (dist > 0.0)
-            {
-               if (dist < min_dist)
-               {
-                  min_dist       = dist;
-                  closest_sphere = i;
-               }
-            }
-         }
-
-         /* If a sphere was intersected by the ray, set the pixel to the color
-          * of the sphere object, else leave the pixel untouched, i.e. keep the
-          * background color */
-         if (closest_sphere != -1)
-         {
-            sphere_t *sphere = &sphere_list[closest_sphere];
-            int r, g, b;
-
-            /* Check that new offset isn't pointing outside the image buffer */
-            if (image_ofs >= (image_sz))
-               return 1;
-
-            sphere_get_color (sphere, &r, &g, &b);
-
-            image[image_ofs + 0] = r;
-            image[image_ofs + 1] = g;
-            image[image_ofs + 2] = b;
-         }
-
-         /* Update image offset */
-         image_ofs += 3;
-      }
-   }
-
-   return 0;
-}
-
-/**
- * setup_scene - Setup scene objects.
- *
- * This function will setup the scene objects, i.e initalize the parameters for
- * each sphere used in the scene.
- *
- * Note:
- * All z-coordinates for the spheres must be in front of the camera, which is
- * at z-coordinate 0, i.e. any negative value should be OK.
- *
- * Returns:
- * none.
- */
-void setup_scene (void)
-{
-   /* Clear the sphere struct */
-   memset (sphere, 0, sizeof(sphere));
-
-   /* Setup sphere 1 */
-   sphere[0].center.x = 0;
-   sphere[0].center.y = 0;
-   sphere[0].center.z = -600;
-   sphere[0].radius   = 100;
-   sphere_set_color (&sphere[0], 255, 0, 0);
-
-   /* Setup sphere 2 */
-   sphere[1].center.x = -200;
-   sphere[1].center.y = 0;
-   sphere[1].center.z = -900;
-   sphere[1].radius   = 100;
-   sphere_set_color (&sphere[1], 0, 255, 0);
-
-   /* Setup sphere 3 */
-   sphere[2].center.x = 200;
-   sphere[2].center.y = 0;
-   sphere[2].center.z = -900;
-   sphere[2].radius   = 100;
-   sphere_set_color (&sphere[2], 0, 0, 255);
-}
 
 #ifdef SSIL
 /**
@@ -263,7 +81,7 @@ int ssgl (uint8_t *image, int width, int height)
    int k;            /* Offset in rendered image buffer */
 
    /* Open a window and create a drawing surface */
-   win = screen_create (SCREEN_WIDTH, SCREEN_HEIGHT);
+   win = screen_create (width, height);
 
    if (!win)
       return 1;
@@ -314,209 +132,27 @@ int ssgl (uint8_t *image, int width, int height)
 }
 #endif
 
-/**
- * render_output_setup - Seyup render output.
- * @cb: Pointer to a render output function.
- *
- * This function will initialize and setup all neccessary data for handling
- * the rendered output image. A callback function, @cb, will be set, which will
- * be called when the rendering is finihed to e.g. display the image.
- *
- * Returns:
- * POSIX OK (zero) or non-zero on error.
- */
-int render_output_setup (int (**cb)())
+int render_output_setup (void)
 {
 #ifdef SSIL
-   *cb = output_ssil;
-
-   return 0;
+   return output_render_setup (output_ssil);
 #endif
 
 #ifdef SSGL
-   *cb = ssgl;
-
-   return 0;
+   return output_render_setup (ssgl);
 #endif
 
    /* error, no method selected */
-   *cb = NULL;
-
    return 1;
-}
-
-char* cli_pop_token (char* line)
-{
-   return strtok (line, " ");
-}
-
-void cli_enter_sphere (int id)
-{
-   char prompt[32];
-   char* line;
-   char* token;
-   int end = 0;
-   int i;
-   int param[3]; /* x, y, z or r, g, b */
-
-   snprintf (prompt, sizeof(prompt), "scene/sphere-%d> ", id);
-
-   while (!end)
-   {
-      line = readline(prompt);
-
-      token = cli_pop_token (line);
-
-      if (!token)
-         continue;
-
-      if (!strcmp (token, "center"))
-      {
-         for (i=0; i<3; i++)
-         {
-            token = cli_pop_token (NULL);
-            if (!token)
-               continue;
-            param[i] = strtol (token, NULL, 10);
-         }
-         sphere[id].center.x = param[0];
-         sphere[id].center.y = param[1];
-         sphere[id].center.z = param[2];
-      }
-      else
-      if (!strcmp (token, "radius"))
-      {
-         token = cli_pop_token (NULL);
-         if (!token)
-            continue;
-         sphere[id].radius = strtol (token, NULL, 10);
-      }
-      else
-      if (!strcmp (token, "color"))
-      {
-         for (i=0; i<3; i++)
-         {
-            token = cli_pop_token (NULL);
-            if (!token)
-               continue;
-            param[i] = strtol (token, NULL, 10);
-         }
-         sphere_set_color (&sphere[id], param[0], param[1], param[2]);
-      }
-      else
-      if (!strcmp (token, "show"))
-      {
-         printf ("x:%.0f, y:%.0f, z:%.0f\n", sphere[id].center.x, sphere[id].center.y, sphere[id].center.z);
-         printf ("radius: %.0f\n", sphere[id].radius);
-         printf ("r:%d, g:%d, b:%d\n", sphere[id].r, sphere[id].g, sphere[id].b);
-      }
-      else
-      if (!strcmp (token, "help"))
-      {
-         printf ("center <X> <Y> <Z>"  "\tSphere center coordinates.\n");
-         printf ("radius <R>"          "\t\tSphere radius\n");
-         printf ("color <R> <G> <B>"   "\tSphere color\n");
-         printf ("show"                "\t\t\tShow sphere settings.\n");
-         printf ("help"                "\t\t\tShow this help text.\n");
-         printf ("end"                 "\t\t\tExit context.\n");
-      }
-      else
-      if (!strcmp (token, "end"))
-      {
-         return;
-      }
-      else
-      {
-         if (strlen (token))
-            printf ("Unknown command\n");
-      }
-   }
-}
-
-void cli_enter_scene (void)
-{
-   char* line;
-   char* token;
-   int end = 0;
-
-   while (!end)
-   {
-      line = readline("scene> ");
-
-      token = cli_pop_token (line);
-
-      if (!token)
-         continue;
-
-      if (!strcmp (token, "sphere"))
-      {
-         int id;
-
-         token = cli_pop_token (NULL);
-         if (!token)
-         {
-            printf ("Missing sphere ID.\n");
-            continue;
-         }
-
-         id = strtol (token, NULL, 10);
-         if (id >=0  && id < NUM_SPHERES)
-         {
-            printf ("Entering sphere context\n");
-            cli_enter_sphere (id);
-         }
-         else
-         {
-            printf ("Invalid ID, must be between 0 and %d\n", NUM_SPHERES);
-         }
-      }
-      else
-      if (!strcmp (token, "help"))
-      {
-         printf ("sphere <ID>"  "\tSetup sphere object.\n");
-         printf (               "\t\t<ID> sphere identity, 0-%d.\n", NUM_SPHERES);
-         printf ("help"         "\t\tShow this help text.\n");
-         printf ("end"          "\t\tExit context.\n");
-      }
-      else
-      if (!strcmp (token, "end"))
-      {
-         return;
-      }
-      else
-      {
-         if (strlen (token))
-            printf ("Unknown command\n");
-      }
-   }
 }
 
 int main (void)
 {
-   vector_t cam;
-   uint8_t  image[SCREEN_WIDTH*SCREEN_HEIGHT*3];         /* Buffer for the rendered image */
-   int (*render_output_cb)(uint8_t*, int, int) = NULL;   /* Rendering putput callback */
-   char* line;
-   char* token;
-   int quit = 0;
-
    /* Print version */
    printf ("srt %s\n", VERSION);
 
-   /* Clear rendered image buffer */
-   memset (image, 0, sizeof(image));
-
-   /* Set camera position */
-   cam.x = 0;
-   cam.y = 0;
-   cam.z = 0;
-
-   /* Setup scene */
-   setup_scene ();
-
    /* Init render output function */
-   render_output_setup (&render_output_cb);
-   if (!render_output_cb)
+   if (render_output_setup ())
    {
       printf ("error: No rendering output method was selected.\n");
       printf ("       Use ssil, ssgl or write your own code.\n");
@@ -526,56 +162,7 @@ int main (void)
    }
 
    /* Enter CLI */
-   printf ("Enter 'help' for available commands.\n");
-   while (!quit)
-   {
-      line = readline("> ");
-
-      token = cli_pop_token (line);
-
-      if (!token)
-         continue;
-
-      if (!strcmp (token, "scene"))
-      {
-         printf ("Entering scene context\n");
-         cli_enter_scene ();
-      }
-      else
-      if (!strcmp (token, "render"))
-      {
-         printf ("Rendering scene\n");
-         /* Render the scene */
-         if (render_scene (image, sizeof(image), SCREEN_WIDTH, SCREEN_HEIGHT, &cam, sphere, NUM_SPHERES))
-            printf ("An error occured when rendering the scene.\n");
-      }
-      else
-      if (!strcmp (token, "output"))
-      {
-         printf ("Calling rendering output function\n");
-         if (render_output_cb (image, SCREEN_WIDTH, SCREEN_HEIGHT))
-            printf ("An error occured when calling the rendering output function.\n");
-      }
-      else
-      if (!strcmp (token, "help"))
-      {
-         printf ("scene"   "\tEnter scene context.\n");
-         printf ("render"  "\tRender scene.\n");
-         printf ("output"  "\tSend the rendered scene to output function.\n");
-         printf ("help"    "\tShow this help text.\n");
-         printf ("quit"    "\tQuit.\n");
-      }
-      else
-      if (!strcmp (token, "quit"))
-      {
-         quit = 1;
-      }
-      else
-      {
-         if (strlen (token))
-            printf ("Unknown command\n");
-      }
-   }
+   cli_enter ();
 
    return 0;
 }

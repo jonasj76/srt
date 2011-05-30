@@ -23,11 +23,11 @@
 #ifndef __SCENE_H__
 #define __SCENE_H__
 
-#include "vector.h"
+#include "camera.h"
 #include "sphere.h"
 
 void scene_init (void);
-vector_t* scene_get_cam (void);
+camera_t* scene_get_camera (void);
 sphere_t* scene_get_sphere (void);
 int scene_get_num_spheres (void);
 

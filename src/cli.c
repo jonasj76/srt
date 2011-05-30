@@ -35,6 +35,64 @@ static char* cli_pop_token (char* line)
    return strtok (line, " ");
 }
 
+static void cli_enter_camera (void)
+{
+   char* line;
+   char* token;
+   int end = 0;
+   int i;
+   int param[3]; /* x, y, z or r, g, b */
+   camera_t *cam = scene_get_camera ();
+
+   while (!end)
+   {
+      line = readline ("scene/camera> ");
+
+      token = cli_pop_token (line);
+
+      if (!token)
+         continue;
+
+      if (!strcmp (token, "position"))
+      {
+         for (i=0; i<3; i++)
+         {
+            token = cli_pop_token (NULL);
+            if (!token)
+               continue;
+            param[i] = strtol (token, NULL, 10);
+         }
+         cam->pos.x = param[0];
+         cam->pos.y = param[1];
+         cam->pos.z = param[2];
+      }
+      else
+      if (!strcmp (token, "show"))
+      {
+         printf ("  x:%.0f, y:%.0f, z:%.0f\n",
+                 cam->pos.x, cam->pos.y, cam->pos.z);
+      }
+      else
+      if (!strcmp (token, "help"))
+      {
+         printf ("position <X> <Y> <Z>" "\tCamera position.\n");
+         printf ("show"                 "\t\t\tShow camera settings.\n");
+         printf ("help"                 "\t\t\tShow this help text.\n");
+         printf ("end"                  "\t\t\tExit context.\n");
+      }
+      else
+      if (!strcmp (token, "end"))
+      {
+         return;
+      }
+      else
+      {
+         if (strlen (token))
+            printf ("Unknown command\n");
+      }
+   }
+}
+
 static void cli_enter_sphere (int id)
 {
    char prompt[32];
@@ -134,6 +192,12 @@ static void cli_enter_scene (void)
       if (!token)
          continue;
 
+      if (!strcmp (token, "camera"))
+      {
+         printf ("Entering camera context\n");
+         cli_enter_camera ();
+      }
+      else
       if (!strcmp (token, "sphere"))
       {
          int id;
@@ -159,9 +223,13 @@ static void cli_enter_scene (void)
       else
       if (!strcmp (token, "show"))
       {
+         camera_t *cam = scene_get_camera ();
          sphere_t *sphere = scene_get_sphere ();
          int i;
 
+         printf ("Camera\n");
+         printf ("  x:%.0f, y:%.0f, z:%.0f\n",
+                 cam->pos.x, cam->pos.y, cam->pos.z);
          for (i=0; i<scene_get_num_spheres (); i++)
          {
             printf ("Sphere %d\n", i);
@@ -174,9 +242,10 @@ static void cli_enter_scene (void)
       else
       if (!strcmp (token, "help"))
       {
+         printf ("camera"       "\t\tSetup camera.\n");
          printf ("sphere <ID>"  "\tSetup sphere object.\n");
          printf (               "\t\t<ID> sphere identity, 0-%d.\n", scene_get_num_spheres());
-         printf ("show"         "\t\tShow sphere objects.\n");
+         printf ("show"         "\t\tShow objects settings.\n");
          printf ("help"         "\t\tShow this help text.\n");
          printf ("end"          "\t\tExit context.\n");
       }
@@ -226,7 +295,7 @@ void cli_enter (void)
                            output_get_image_size (),
                            output_get_image_width (),
                            output_get_image_height (),
-                           scene_get_cam(),
+                           scene_get_camera (),
                            scene_get_sphere (),
                            scene_get_num_spheres ()))
             printf ("An error occured when rendering the scene.\n");

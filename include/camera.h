@@ -1,11 +1,10 @@
 /**
- * ray.h - Ray object.
+ * camera.h - Camera object.
  *
  * Copyright (c) 2011, Jonas Johansson <jonasj76@gmail.com>
  *
  * Description:
- * This class defines a single ray object by storing its origin and
- * direction vectors.
+ * This class defines a camera.
  *
  * License:
  * Permission to use, copy, modify, and/or distribute this software for any
@@ -21,19 +20,18 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef __RAY_H__
-#define __RAY_H__
+#ifndef __CAMERA_H__
+#define __CAMERA_H__
 
 #include "vector.h"
 
-/* Ray object */
+/* Camera object */
 typedef struct
 {
-   vector_t origin;   /* Origin of the ray */
-   vector_t dir;      /* Direction the ray is going */
-}  ray_t;
+   vector_t pos;   /* Position of the camera */
+}  camera_t;
 
-#endif /* __RAY_H__ */
+#endif /* __CAMERA_H__ */
 
 /**
  * Local Variables:

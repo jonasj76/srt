@@ -27,6 +27,7 @@
 
 #include "vector.h"
 #include "ray.h"
+#include "camera.h"
 #include "sphere.h"
 
 #include "render.h"
@@ -60,7 +61,7 @@ int render_scene (uint8_t* image,
                   size_t image_sz,
                   int screen_width,
                   int screen_height,
-                  vector_t *cam,
+                  camera_t *cam,
                   sphere_t *sphere_list,
                   int num_spheres)
 {
@@ -77,9 +78,9 @@ int render_scene (uint8_t* image,
    memset (image, 0, image_sz);
 
    /* Set starting point for the ray to the camera position */
-   ray.origin.x = cam->x;
-   ray.origin.y = cam->y;
-   ray.origin.z = cam->z;
+   ray.origin.x = cam->pos.x;
+   ray.origin.y = cam->pos.y;
+   ray.origin.z = cam->pos.z;
 
    /* Reset image offset pointer */
    image_ofs = 0;

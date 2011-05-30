@@ -22,7 +22,7 @@
 
 #include <string.h> /* memset */
 
-#include "vector.h"
+#include "camera.h"
 #include "sphere.h"
 
 #include "scene.h"
@@ -31,7 +31,7 @@
 #define NUM_SPHERES 3
 
 static sphere_t sphere[NUM_SPHERES];
-static vector_t cam;
+static camera_t cam;
 
 /**
  * setup_scene - Setup scene objects.
@@ -48,9 +48,9 @@ static vector_t cam;
 void scene_init (void)
 {
    /* Setup camera */
-   cam.x = 0;
-   cam.y = 0;
-   cam.z = 0;
+   cam.pos.x = 0;
+   cam.pos.y = 0;
+   cam.pos.z = 0;
 
    /* Clear the sphere struct */
    memset (sphere, 0, sizeof(sphere));
@@ -86,7 +86,7 @@ void scene_init (void)
  * Returns:
  * Pointer to camera object.
  */
-vector_t* scene_get_cam (void)
+camera_t* scene_get_camera (void)
 {
    return &cam;
 }

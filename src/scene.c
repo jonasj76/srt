@@ -51,6 +51,7 @@ void scene_init (void)
    cam.pos.x = 0;
    cam.pos.y = 0;
    cam.pos.z = 0;
+   cam.fov   = 3.14 / 4.0;   /* 45 degree */
 
    /* Clear the sphere struct */
    memset (sphere, 0, sizeof(sphere));

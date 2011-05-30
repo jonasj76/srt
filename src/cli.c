@@ -67,15 +67,31 @@ static void cli_enter_camera (void)
          cam->pos.z = param[2];
       }
       else
+      if (!strcmp (token, "fov"))
+      {
+         int fov;
+
+         token = cli_pop_token (NULL);
+         if (!token)
+            continue;
+         fov = strtol (token, NULL, 10);
+
+         cam->fov = 3.14 * fov / 180.0;
+      }
+      else
       if (!strcmp (token, "show"))
       {
-         printf ("  x:%.0f, y:%.0f, z:%.0f\n",
+         printf ("  x: %.0f, y: %.0f, z: %.0f\n",
                  cam->pos.x, cam->pos.y, cam->pos.z);
+         printf ("  fov: %.0f\n",
+                 cam->fov * 180.0 / 3.14);
+
       }
       else
       if (!strcmp (token, "help"))
       {
          printf ("position <X> <Y> <Z>" "\tCamera position.\n");
+         printf ("fov <V>"              "\t\t\tField of view (in degree).\n");
          printf ("show"                 "\t\t\tShow camera settings.\n");
          printf ("help"                 "\t\t\tShow this help text.\n");
          printf ("end"                  "\t\t\tExit context.\n");
@@ -149,10 +165,10 @@ static void cli_enter_sphere (int id)
       else
       if (!strcmp (token, "show"))
       {
-         printf ("x:%.0f, y:%.0f, z:%.0f\n",
+         printf ("x: %.0f, y: %.0f, z: %.0f\n",
                  sphere[id].center.x, sphere[id].center.y, sphere[id].center.z);
          printf ("radius: %.0f\n", sphere[id].radius);
-         printf ("r:%d, g:%d, b:%d\n", sphere[id].r, sphere[id].g, sphere[id].b);
+         printf ("r: %d, g: %d, b: %d\n", sphere[id].r, sphere[id].g, sphere[id].b);
       }
       else
       if (!strcmp (token, "help"))
@@ -228,15 +244,17 @@ static void cli_enter_scene (void)
          int i;
 
          printf ("Camera\n");
-         printf ("  x:%.0f, y:%.0f, z:%.0f\n",
+         printf ("  x: %.0f, y: %.0f, z: %.0f\n",
                  cam->pos.x, cam->pos.y, cam->pos.z);
+         printf ("  fov: %.0f\n",
+                 cam->fov * 180.0 / 3.14);
          for (i=0; i<scene_get_num_spheres (); i++)
          {
             printf ("Sphere %d\n", i);
-            printf ("  x:%.0f, y:%.0f, z:%.0f\n",
+            printf ("  x: %.0f, y: %.0f, z: %.0f\n",
                     sphere[i].center.x, sphere[i].center.y, sphere[i].center.z);
             printf ("  radius: %.0f\n", sphere[i].radius);
-            printf ("  r:%d, g:%d, b:%d\n", sphere[i].r, sphere[i].g, sphere[i].b);
+            printf ("  r: %d, g: %d, b: %d\n", sphere[i].r, sphere[i].g, sphere[i].b);
          }
       }
       else

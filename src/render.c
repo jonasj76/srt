@@ -66,9 +66,9 @@ int render_scene (uint8_t* image,
                   int num_spheres)
 {
    const float aspect_ratio = (float)screen_height / (float)screen_width;
-   const float fov_x = 3.14 / 4.0;             /* Field of view in the x-plane */
-   const float fov_y = fov_x * aspect_ratio;   /* Field of view in the y-plane
-                                                * with aspect ratio correction */
+   const float fov_x = cam->fov;                  /* Field of view in the x-plane */
+   const float fov_y = cam->fov * aspect_ratio;   /* Field of view in the y-plane
+                                                   * with aspect ratio correction */
    ray_t ray;          /* The ray that will be used to trace through every pixel
                         * in the rendered image */
    int x, y;           /* Loop variables for each pixel */

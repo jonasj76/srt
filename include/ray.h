@@ -27,8 +27,7 @@
 #include "vector.h"
 
 /* Ray object */
-typedef struct
-{
+typedef struct {
    vector_t origin;   /* Origin of the ray */
    vector_t dir;      /* Direction the ray is going */
 }  ray_t;

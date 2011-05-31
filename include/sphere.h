@@ -27,11 +27,10 @@
 #include "ray.h"
 
 /* Sphere class */
-typedef struct
-{
-   vector_t center;   /* Position */
-   float radius;      /* Radius */
-   int r, g, b;       /* Color */
+typedef struct {
+   vector_t center;    /* Position */
+   float    radius;    /* Radius */
+   int      r, g, b;   /* Color */
 } sphere_t;
 
 float sphere_intersect (sphere_t *sphere, ray_t *ray);

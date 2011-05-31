@@ -34,7 +34,6 @@
 #endif
 
 #ifdef SSGL
-#include <SDL/SDL.h>
 #include "screen.h"
 #include "draw.h"
 #endif
@@ -76,7 +75,7 @@ int output_ssil (uint8_t *image, int width, int height)
  */
 int ssgl (uint8_t *image, int width, int height)
 {
-   SDL_Surface *win; /* Pointer to the drawing surface */
+   screen_t *win;    /* Pointer to the drawing surface */
    int x, y;         /* Loop variables for drawing surface coordinates */
    int k;            /* Offset in rendered image buffer */
 

@@ -26,8 +26,7 @@
 #include "vector.h"
 
 /* Camera object */
-typedef struct
-{
+typedef struct {
    vector_t pos;   /* Position of the camera */
    float    fov;   /* Field of view */
 }  camera_t;

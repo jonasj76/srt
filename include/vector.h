@@ -25,10 +25,7 @@
 
 /* Vector class */
 typedef struct {
-   /* Vertex's for the x, y, and z axis. */
-   float x;
-   float y;
-   float z;
+   float x, y, z;   /* Vertex's for the x, y, and z axis. */
 } vector_t;
 
 void vector_sub (vector_t *vr, vector_t *v1, vector_t *v2);

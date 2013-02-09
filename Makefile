@@ -7,44 +7,54 @@
 .EXPORT_ALL_VARIABLES:
 .PHONY: all clean
 
-EXEC     = srt
+ROOTDIR = $(shell pwd)
 
-ROOTDIR  = $(shell pwd)
+include $(ROOTDIR)/user.mk
+
+EXEC     = srt
 
 CC       = gcc
 CFLAGS   = -std=gnu99 -Wall -Wextra -Werror
 CPPFLAGS = -I $(ROOTDIR)/include
 RM       = rm -f
 
-OBJS     = src/vector.o src/sphere.o src/scene.o src/render.o src/output.o src/cli.o
+OBJS    := srt.o
 LIBS     = -lm -lreadline
+
+MODULES  = src
+SRCS     = $(OBJS:.o=.c)
+DEPS    := $(addprefix .,$(OBJS:.o=.d))
 
 PATH	:= $(PATH):$(ROOTDIR)
 
-# Uncomment the lines below for ssil (Small and Simple Image Library) or
-# ssgl (Small and Simple Graphics Library) to use one of the libraries
-# when building. Without ssil or ssgl you won't get any visual output.
-# If you don't wont to use any of the libraries you can instead write your
-# own code to handle the visual output, see README for more information.
-# ssil can be cloned from https://github.com/mrjojo/ssil.git
-# ssgl can be cloned from https://github.com/mrjojo/ssgl.git
+# Include the description for each sub-module
+include $(patsubst %,%/module.mk,$(MODULES))
 
-# Uncomment the following three lines to use ssil
+
+# Render output selection (see README for more information)
+
+# Comment the line below to DISABLE visual output from the included ssil
+# (Small and Simple Image Library). I.e if you want to write your own code or
+# use ssgl (see below) instead.
+# note: ssil will create a .tga file which can be viewed by any image viewer.
+CFLAGS   += -D SSIL
+
+# Uncomment the following three lines to use the latest ssil version.
+# ssil can be cloned from https://github.com/mrjojo/ssil.git
 #CFLAGS   += -D SSIL
 #CPPFLAGS += -I $(ROOTDIR)/../ssil/include
 #LIBS     += ../ssil/ssil.a
 
-# Uncomment the following three lines to use ssgl
+# Uncomment the lines below to use ssgl (Small and Simple Graphics Library).
+# ssgl can be cloned from https://github.com/mrjojo/ssgl.git
 #CFLAGS   += -D SSGL
 #CPPFLAGS += -I $(ROOTDIR)/../ssgl/include
 #LIBS     += ../ssgl/ssgl.a -lSDL
 
-all:
+all: Makefile
 	@mkversion
-	$(MAKE) -C src
-	$(CC) $(CFLAGS) $(CPPFLAGS) srt.c $(OBJS) $(LIBS) -o $(EXEC)
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(SRCS) $(LIBS) -o $(EXEC)
 
 clean:
-	$(MAKE) -C src clean
 	$(RM) version.h
-	$(RM) $(EXEC)
+	$(RM) $(OBJS) $(DEPS) $(EXEC)

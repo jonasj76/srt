@@ -23,6 +23,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <stdio.h>
 #include <stdint.h>
 
 #include "output.h"
@@ -30,7 +31,7 @@
 #include "version.h"
 
 #ifdef SSIL
-#include "tga.h"
+#include "ssil/tga.h"
 #endif
 
 #ifdef SSGL

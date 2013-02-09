@@ -4,17 +4,16 @@ Simple Ray Tracer
 "srt" is a simple ray tracer. Currently it only support rendering a scene
 containing only spheres. The scene is setup using a CLI.
 
-Configuration
--------------
-Without any configuration srt will not perform any visual output. To make a
-visual output you can either use ssil (Small and Simle Image Library) to
-generate a .tga image, use ssgl (Small and Simple Graphics Library) to
-open a window with the rendered scene or write your own code to handle the
-output.
+Render output selection
+-----------------------
+As default visual output a .tga file will be created which can be viewed by
+any image viewer. The .tga file is created using the included ssil
+(Small and Simle Image Library).
 
-See Makefile for more information about using ssil or ssgl.
-ssil can be found at https://github.com/mrjojo/ssil.
-ssgl can be found at https://github.com/mrjojo/ssgl.
+If you dont want the the included ssil to handle the visual output, you can
+write your own code or use ssgl (Small and Simple Graphics Library) to
+open a window with the rendered scene. See Makefile how to disable ssil and
+use ssgl.
 
 If you prefer writing your own code for a visual output you have the data for
 the rendered scene available in the variable 'image'. The data in 'image' is

@@ -309,6 +309,24 @@ int cli_enter (void)
          cli_enter_scene ();
       }
       else
+      if (!strcmp (token, "width"))
+      {
+         char* arg = cli_pop_token (NULL);
+         output_set_image_width (atoi(arg));
+      }
+      else
+      if (!strcmp (token, "height"))
+      {
+         char* arg = cli_pop_token (NULL);
+         output_set_image_height (atoi(arg));
+      }
+      else
+      if (!strcmp (token, "show"))
+      {
+         printf ("Screen width:  %d\n", output_get_image_width ());
+         printf ("Screen height: %d\n", output_get_image_height ());
+      }
+      else
       if (!strcmp (token, "render"))
       {
          printf ("Rendering scene\n");
@@ -333,6 +351,9 @@ int cli_enter (void)
       if (!strcmp (token, "help"))
       {
          printf ("scene"   "\tEnter scene context.\n");
+         printf ("width"   "\tRendered screen width.\n");
+         printf ("height"  "\tRendered screen height.\n");
+         printf ("show"    "\tShow settings.\n");
          printf ("render"  "\tRender scene.\n");
          printf ("output"  "\tSend the rendered scene to output function.\n");
          printf ("help"    "\tShow this help text.\n");

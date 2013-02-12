@@ -31,7 +31,9 @@ int output_render (void);
 uint8_t* output_get_image (void);
 size_t output_get_image_size (void);
 int output_get_image_width (void);
+int output_set_image_width (int w);
 int output_get_image_height (void);
+int output_set_image_height (int h);
 
 #endif /* __OUTPUT_H__ */
 

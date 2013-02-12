@@ -20,14 +20,20 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <stdio.h>
 #include "output.h"
 
+/* Default scene dimensions */
+#define DEFAULT_SCREEN_WIDTH  640
+#define DEFAULT_SCREEN_HEIGHT 480
+#define BPP                   3
+
 /* Rendered scene dimensions */
-#define SCREEN_WIDTH  640
-#define SCREEN_HEIGHT 480
+static int screen_width  = DEFAULT_SCREEN_WIDTH;
+static int screen_height = DEFAULT_SCREEN_HEIGHT;
 
 /* Buffer for the rendered image */
-static uint8_t image[SCREEN_WIDTH*SCREEN_HEIGHT*3];
+static uint8_t* image = NULL;
 
 /* Rendering output callback */
 int (*output_render_cb)(uint8_t*, int, int) = NULL;
@@ -46,9 +52,19 @@ int (*output_render_cb)(uint8_t*, int, int) = NULL;
 int output_render_setup (int (*cb)())
 {
    if (!cb)
+   {
+      fprintf (stderr, "error: No rendering output method was selected.\n");
+      fprintf (stderr, "       See README and Makefile for more information.\n");
       return 1;
-
+   }
    output_render_cb = cb;
+
+   image = malloc (screen_width * screen_height * BPP);
+   if (!image)
+   {
+      fprintf (stderr, "error: Unable to alloc memory for image buffer\n");
+      return 1;
+   }
 
    return 0;
 }
@@ -65,7 +81,18 @@ int output_render_setup (int (*cb)())
  */
 int output_render (void)
 {
-   return output_render_cb (image, SCREEN_WIDTH, SCREEN_HEIGHT);
+   if (!output_render_cb)
+   {
+      fprintf (stderr, "error: No renderdeing output method found.\n");
+      return 1;
+   }
+   if (!image)
+   {
+      fprintf (stderr, "error: No image buffer found.\n");
+      return 1;
+   }
+
+   return output_render_cb (image, screen_width, screen_height);
 }
 
 /**
@@ -92,7 +119,7 @@ uint8_t* output_get_image (void)
  */
 size_t output_get_image_size (void)
 {
-   return sizeof(image);
+   return screen_width * screen_height * BPP;
 }
 
 /**
@@ -105,7 +132,37 @@ size_t output_get_image_size (void)
  */
 int output_get_image_width (void)
 {
-   return SCREEN_WIDTH;
+   return screen_width;
+}
+
+/**
+ * output_set_image_width - Set width of image buffer.
+ *
+ * This function will set the width of the output image buffer.
+ *
+ * todo:
+ * Find a better way to resize buffer.
+ *
+ * Returns:
+ * POSIX OK (zero) or non-zero on error.
+ */
+int output_set_image_width (int w)
+{
+   if (image)
+   {
+      free (image);
+      image = NULL;
+   }
+
+   image = malloc (w * screen_height * BPP);
+   if (!image)
+   {
+      fprintf (stderr, "error: Unable to alloc memory for image buffer\n");
+      return 1;
+   }
+
+   screen_width = w;
+   return 0;
 }
 
 /**
@@ -118,7 +175,37 @@ int output_get_image_width (void)
  */
 int output_get_image_height (void)
 {
-   return SCREEN_HEIGHT;
+   return screen_height;
+}
+
+/**
+ * output_set_image_height - Set height of image buffer.
+ *
+ * This function will set the height of the output image buffer.
+ *
+ * todo:
+ * Find a better way to resize buffer.
+ *
+ * Returns:
+ * POSIX OK (zero) or non-zero on error.
+ */
+int output_set_image_height (int h)
+{
+   if (image)
+   {
+      free (image);
+      image = NULL;
+   }
+
+   image = malloc (screen_width * h * BPP);
+   if (!image)
+   {
+      fprintf (stderr, "error: Unable to alloc memory for image buffer\n");
+      return 1;
+   }
+
+   screen_height = h;
+   return 0;
 }
 
 /**

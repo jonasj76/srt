@@ -27,11 +27,7 @@
 
 #include "scene.h"
 
-/* Number of spheres in scene */
-#define NUM_SPHERES 3
-
-static sphere_t sphere[NUM_SPHERES];
-static camera_t cam;
+static scene_t scene;
 
 /**
  * scene_init - Setup scene objects.
@@ -47,38 +43,49 @@ static camera_t cam;
  */
 void scene_init (void)
 {
-   /* Clear the camera and sphere structs */
-   memset (&cam,   0, sizeof(cam));
-   memset (sphere, 0, sizeof(sphere));
+   /* Clear the scene struct */
+   memset (&scene, 0, sizeof(scene));
+}
+
+/**
+ * scene_get_scene - Get scene object.
+ *
+ * This function will get a pointer to the scene object.
+ *
+ * Returns:
+ * Pointer to scene object.
+ */
+scene_t* scene_get_scene (void)
+{
+   return &scene;
 }
 
 /**
  * scene_get_cam - Get camera object.
+ * @scene: Pointer to scene_t object
  *
- * This function will get a pointer to the camera object
- * in the scene.
+ * This function will get a pointer to the camera object in the scene.
  *
  * Returns:
  * Pointer to camera object.
  */
-camera_t* scene_get_camera (void)
+camera_t* scene_get_camera (scene_t* scene)
 {
-   return &cam;
+   return &scene->cam;
 }
 
 /**
  * scene_get_sphere - Get sphere object.
- * @id: ID of sphere object
+ * @scene: Pointer to scene_t object
  *
- * This function will get a pointer to the sphere objects
- * in the scene.
+ * This function will get a pointer to the sphere objects in the scene.
  *
  * Returns:
  * Pointer to sphere objects.
  */
-sphere_t* scene_get_sphere (void)
+sphere_t* scene_get_sphere (scene_t* scene)
 {
-   return sphere;
+   return scene->sphere;
 }
 
 /**

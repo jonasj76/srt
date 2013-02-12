@@ -26,9 +26,19 @@
 #include "camera.h"
 #include "sphere.h"
 
+/* Number of spheres in scene */
+#define NUM_SPHERES 3
+
+/* Scene object */
+typedef struct {
+   camera_t cam;                  /* Camera object */
+   sphere_t sphere[NUM_SPHERES];  /* Sphere objects */
+}  scene_t;
+
 void scene_init (void);
-camera_t* scene_get_camera (void);
-sphere_t* scene_get_sphere (void);
+scene_t* scene_get_scene (void);
+camera_t* scene_get_camera (scene_t* scene);
+sphere_t* scene_get_sphere (scene_t* scene);
 int scene_get_num_spheres (void);
 
 #endif /* __SCENE_H__ */

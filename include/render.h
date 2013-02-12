@@ -25,17 +25,13 @@
 
 #include <stdint.h>
 
-#include "vector.h"
-#include "camera.h"
-#include "sphere.h"
+#include "scene.h"
 
 int render_scene (uint8_t* image,
                   size_t image_sz,
                   int screen_width,
                   int screen_height,
-                  camera_t *cam,
-                  sphere_t *sphere_list,
-                  int num_spheres);
+                  scene_t *scene);
 
 #endif /* __RENDER_H__ */
 

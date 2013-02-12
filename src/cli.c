@@ -43,7 +43,7 @@ static void cli_enter_camera (void)
    int end = 0;
    int i;
    int param[3]; /* x, y, z or r, g, b */
-   camera_t *cam = scene_get_camera ();
+   camera_t *cam = scene_get_camera (scene_get_scene ());
 
    while (!end)
    {
@@ -118,7 +118,7 @@ static void cli_enter_sphere (int id)
    int end = 0;
    int i;
    int param[3]; /* x, y, z or r, g, b */
-   sphere_t *sphere = scene_get_sphere ();
+   sphere_t *sphere = scene_get_sphere (scene_get_scene ());
 
    while (!end)
    {
@@ -240,8 +240,8 @@ static void cli_enter_scene (void)
       else
       if (!strcmp (token, "show"))
       {
-         camera_t *cam = scene_get_camera ();
-         sphere_t *sphere = scene_get_sphere ();
+         camera_t *cam    = scene_get_camera (scene_get_scene ());
+         sphere_t *sphere = scene_get_sphere (scene_get_scene ());
          int i;
 
          printf ("Camera\n");
@@ -311,10 +311,10 @@ int cli_enter (void)
                            output_get_image_size (),
                            output_get_image_width (),
                            output_get_image_height (),
-                           scene_get_camera (),
-                           scene_get_sphere (),
-                           scene_get_num_spheres ()))
-            printf ("An error occured when rendering the scene.\n");
+                           scene_get_scene ()))
+         {
+            fprintf (stderr, "An error occured when rendering the scene.\n");
+         }
       }
       else
       if (!strcmp (token, "output"))

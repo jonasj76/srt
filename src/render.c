@@ -29,6 +29,7 @@
 #include "ray.h"
 #include "camera.h"
 #include "sphere.h"
+#include "scene.h"
 
 #include "render.h"
 
@@ -61,10 +62,11 @@ int render_scene (uint8_t* image,
                   size_t image_sz,
                   int screen_width,
                   int screen_height,
-                  camera_t *cam,
-                  sphere_t *sphere_list,
-                  int num_spheres)
+                  scene_t* scene)
 {
+   camera_t *cam         = scene_get_camera (scene);
+   sphere_t *sphere_list = scene_get_sphere (scene);
+   const int num_spheres = scene_get_num_spheres ();
    const float aspect_ratio = (float)screen_height / (float)screen_width;
    const float fov_x = cam->fov;                  /* Field of view in the x-plane */
    const float fov_y = cam->fov * aspect_ratio;   /* Field of view in the y-plane

@@ -53,7 +53,7 @@
  */
 void parse_sphere (xmlNodePtr cur, int id)
 {
-   sphere_t* sphere = scene_get_sphere ();
+   sphere_t* sphere = scene_get_sphere (scene_get_scene ());
    xmlChar *prop;
 
    if (id<0 || id>scene_get_num_spheres ())
@@ -104,7 +104,7 @@ void parse_sphere (xmlNodePtr cur, int id)
  */
 void parse_camera (xmlNodePtr cur)
 {
-   camera_t* cam = scene_get_camera ();
+   camera_t* cam = scene_get_camera (scene_get_scene ());
    xmlChar *prop;
 
    while (cur)

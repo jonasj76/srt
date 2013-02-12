@@ -26,6 +26,7 @@
 #include "camera.h"
 #include "sphere.h"
 #include "scene.h"
+#include "color.h"
 
 #include "xml.h"
 
@@ -83,13 +84,13 @@ void parse_sphere (xmlNodePtr cur, int id)
          // Color
          prop = xmlGetProp (cur, TAG_R);
          if (prop)
-            sphere[id].r = atoi((char*)prop);
+            color_set (&sphere[id].color, atoi((char*)prop), -1, -1);
          prop = xmlGetProp (cur, TAG_G);
          if (prop)
-            sphere[id].g = atoi((char*)prop);
+            color_set (&sphere[id].color, -1, atoi((char*)prop), -1);
          prop = xmlGetProp (cur, TAG_B);
          if (prop)
-            sphere[id].b = atoi((char*)prop);
+            color_set (&sphere[id].color, -1, -1, atoi((char*)prop));
       }
       cur = cur->next;
    }

@@ -1,7 +1,7 @@
 /**
  * sphere.c - Sphere object class.
  *
- * Copyright (c) 2011, Jonas Johansson <jonasj76@gmail.com>
+ * Copyright (c) 2011-2013, Jonas Johansson <jonasj76@gmail.com>
  *
  * Description:
  * This class defines a 3D sphere.
@@ -20,15 +20,14 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <assert.h>
 #include <math.h>
 #include "vector.h"
 #include "sphere.h"
 
 /**
  * sphere_intersect - Check ray intersection with a sphere object.
- * @sphere: Pointer to sphere object.
- * @ray: Pointer to normalized ray object.
+ * @sphere: Pointer to sphere object
+ * @ray:    Pointer to normalized ray object
  *
  * This function will test if a ray, @ray, will intersect a sphere, @sphere.
  * Imaging a ray R with origin at E and direction V intersecting a sphere with
@@ -88,7 +87,7 @@
  * Distance from @ray origin to the @sphere intersection point or 0 if no
  * intersection was found.
  */
-float sphere_intersect (sphere_t *sphere, ray_t *ray)
+float sphere_intersect (sphere_t* sphere, ray_t* ray)
 {
    vector_t oe;   /* O-E vector in fig 1. */
    float    c;    /* Length of O-E vector, i.e. c in fig 1. */
@@ -121,44 +120,6 @@ float sphere_intersect (sphere_t *sphere, ray_t *ray)
    /* The ray hit the sphere, return the distance from the ray origin to
     * the intersection point (P) */
    return v - sqrt(d2);
-}
-
-/**
- * sphere_set_color - Set color of sphere object.
- * @sphere: Pointer to sphere object.
- * @r:      Red component color value.
- * @g:      Green component color value.
- * @b:      Blue component color value.
- *
- * This function will set the color of a sphere object.
- *
- * Returns:
- * none.
- */
-void sphere_set_color (sphere_t *sphere, int r, int g, int b)
-{
-   sphere->r = r;
-   sphere->g = g;
-   sphere->b = b;
-}
-
-/**
- * sphere_get_color - Get color of sphere object.
- * @sphere: Pointer to sphere object.
- * @r:      Pointer to integer where to return red component.
- * @g:      Pointer to integer where to return green component.
- * @b:      Pointer to integer where to return blue component.
- *
- * This function will get the color of a sphere object.
- *
- * Returns:
- * none.
- */
-void sphere_get_color (sphere_t *sphere, int *r, int *g, int *b)
-{
-   *r = sphere->r;
-   *g = sphere->g;
-   *b = sphere->b;
 }
 
 /**

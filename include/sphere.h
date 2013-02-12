@@ -25,18 +25,16 @@
 
 #include "vector.h"
 #include "ray.h"
+#include "color.h"
 
 /* Sphere class */
 typedef struct {
-   vector_t center;    /* Position */
+   vector_t center;    /* Center position */
    float    radius;    /* Radius */
-   int      r, g, b;   /* Color */
+   color_t  color;     /* Color */
 } sphere_t;
 
 float sphere_intersect (sphere_t *sphere, ray_t *ray);
-
-void sphere_set_color (sphere_t *sphere, int r, int g, int b);
-void sphere_get_color (sphere_t *sphere, int *r, int *g, int *b);
 
 #endif /* __SPHERE_H__ */
 

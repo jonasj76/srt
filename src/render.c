@@ -1,7 +1,7 @@
 /**
  * render.h - Render class.
  *
- * Copyright (c) 2011, Jonas Johansson <jonasj76@gmail.com>
+ * Copyright (c) 2011-2013, Jonas Johansson <jonasj76@gmail.com>
  *
  * Description:
  * This class defines the ray tracing rendering.
@@ -35,14 +35,14 @@
 
 /**
  * render_scene - Creates a rendered scene.
- * @image:         Pointer to buffer which will contain the rendered scene.
- * @image_sz:      Size of @image buffer.
- * @screen_width:  Width of rendered screen.
- * @screen_height: Height of rendered screen.
- * @cam:           Camera object.
- * @screen:        Pointer to a screen plane object.
- * @sphere_list:   Pointer to a list of sphere object.
- * @num_spheres:   Num of spheres in @sphere_list.
+ * @image:         Pointer to buffer which will contain the rendered scene
+ * @image_sz:      Size of @image buffer
+ * @screen_width:  Width of rendered screen
+ * @screen_height: Height of rendered screen
+ * @cam:           Camera object
+ * @screen:        Pointer to a screen plane object
+ * @sphere_list:   Pointer to a list of sphere object
+ * @num_spheres:   Num of spheres in @sphere_list
  *
  * This function will create a rendered scene. The output is written to @output
  * and is stored as an array of pixels, starting with the pixel at the lower
@@ -155,7 +155,7 @@ int render_scene (uint8_t* image,
             if (image_ofs >= (image_sz))
                return 1;
 
-            sphere_get_color (sphere, &r, &g, &b);
+            color_get (&sphere->color, &r, &g, &b);
 
             image[image_ofs + 0] = r;
             image[image_ofs + 1] = g;

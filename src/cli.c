@@ -161,15 +161,18 @@ static void cli_enter_sphere (int id)
                continue;
             param[i] = strtol (token, NULL, 10);
          }
-         sphere_set_color (&sphere[id], param[0], param[1], param[2]);
+         color_set (&sphere[id].color, param[0], param[1], param[2]);
       }
       else
       if (!strcmp (token, "show"))
       {
+         int r,g,b;
+
          printf ("x: %.0f, y: %.0f, z: %.0f\n",
                  sphere[id].center.x, sphere[id].center.y, sphere[id].center.z);
          printf ("radius: %.0f\n", sphere[id].radius);
-         printf ("r: %d, g: %d, b: %d\n", sphere[id].r, sphere[id].g, sphere[id].b);
+         color_get (&sphere[id].color, &r, &g, &b);
+         printf ("r: %d, g: %d, b: %d\n", r, g, b);
       }
       else
       if (!strcmp (token, "help"))
@@ -251,11 +254,14 @@ static void cli_enter_scene (void)
                  cam->fov * 180.0 / 3.14);
          for (i=0; i<scene_get_num_spheres (); i++)
          {
+            int r,g,b;
+
             printf ("Sphere %d\n", i);
             printf ("  x: %.0f, y: %.0f, z: %.0f\n",
                     sphere[i].center.x, sphere[i].center.y, sphere[i].center.z);
             printf ("  radius: %.0f\n", sphere[i].radius);
-            printf ("  r: %d, g: %d, b: %d\n", sphere[i].r, sphere[i].g, sphere[i].b);
+            color_get (&sphere[i].color, &r, &g, &b);
+            printf ("r: %d, g: %d, b: %d\n", r, g, b);
          }
       }
       else

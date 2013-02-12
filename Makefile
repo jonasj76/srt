@@ -15,11 +15,11 @@ EXEC     = srt
 
 CC       = gcc
 CFLAGS   = -std=gnu99 -Wall -Wextra -Werror
-CPPFLAGS = -I $(ROOTDIR)/include
+CPPFLAGS = -I $(ROOTDIR)/include -I /usr/include/libxml2
 RM       = rm -f
 
 OBJS    := srt.o
-LIBS     = -lm -lreadline
+LIBS     = -lm -lreadline -lxml2
 
 MODULES  = src
 SRCS     = $(OBJS:.o=.c)

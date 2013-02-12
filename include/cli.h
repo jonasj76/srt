@@ -23,7 +23,7 @@
 #ifndef __CLI_H__
 #define __CLI_H__
 
-void cli_enter (void);
+int cli_enter (void);
 
 #endif /* __CLI_H__ */
 

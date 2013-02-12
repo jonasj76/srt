@@ -1,7 +1,7 @@
 /**
  * scene.c - Scene class.
  *
- * Copyright (c) 2011, Jonas Johansson <jonasj76@gmail.com>
+ * Copyright (c) 2011-2013, Jonas Johansson <jonasj76@gmail.com>
  *
  * Description:
  * This class defines the scene.
@@ -34,7 +34,7 @@ static sphere_t sphere[NUM_SPHERES];
 static camera_t cam;
 
 /**
- * setup_scene - Setup scene objects.
+ * scene_init - Setup scene objects.
  *
  * This function will setup default values for the scene objects.
  *
@@ -47,35 +47,9 @@ static camera_t cam;
  */
 void scene_init (void)
 {
-   /* Setup camera */
-   cam.pos.x = 0;
-   cam.pos.y = 0;
-   cam.pos.z = 0;
-   cam.fov   = 3.14 / 4.0;   /* 45 degree */
-
-   /* Clear the sphere struct */
+   /* Clear the camera and sphere structs */
+   memset (&cam,   0, sizeof(cam));
    memset (sphere, 0, sizeof(sphere));
-
-   /* Setup sphere 1 */
-   sphere[0].center.x = 0;
-   sphere[0].center.y = 0;
-   sphere[0].center.z = -600;
-   sphere[0].radius   = 100;
-   sphere_set_color (&sphere[0], 255, 0, 0);
-
-   /* Setup sphere 2 */
-   sphere[1].center.x = -200;
-   sphere[1].center.y = 0;
-   sphere[1].center.z = -900;
-   sphere[1].radius   = 100;
-   sphere_set_color (&sphere[1], 0, 255, 0);
-
-   /* Setup sphere 3 */
-   sphere[2].center.x = 200;
-   sphere[2].center.y = 0;
-   sphere[2].center.z = -900;
-   sphere[2].radius   = 100;
-   sphere_set_color (&sphere[2], 0, 0, 255);
 }
 
 /**

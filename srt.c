@@ -1,7 +1,7 @@
 /**
  * Simple Ray Tracer
  *
- * Copyright (c) 2011, Jonas Johansson <jonasj76@gmail.com>
+ * Copyright (c) 2011-2013, Jonas Johansson <jonasj76@gmail.com>
  *
  * Description:
  * This program will render a scene containing a sphere object.
@@ -27,7 +27,9 @@
 #include <stdint.h>
 
 #include "output.h"
+#include "scene.h"
 #include "cli.h"
+#include "xml.h"
 #include "version.h"
 
 #ifdef SSIL
@@ -38,6 +40,8 @@
 #include "screen.h"
 #include "draw.h"
 #endif
+
+#define SCENE_FILE "scene.xml"
 
 #ifdef SSIL
 /**
@@ -154,17 +158,25 @@ int main (void)
    /* Init render output function */
    if (render_output_setup ())
    {
-      printf ("error: No rendering output method was selected.\n");
-      printf ("       Use ssil, ssgl or write your own code.\n");
-      printf ("       See README and Makefile for more information.\n");
+      fprintf (stderr, "error: No rendering output method was selected.\n");
+      fprintf (stderr, "       Use ssil, ssgl or write your own code.\n");
+      fprintf (stderr, "       See README and Makefile for more information.\n");
 
       return 1;
    }
 
-   /* Enter CLI */
-   cli_enter ();
+   /* Init scene */
+   scene_init ();
+   /* Load scene */
+   printf ("Loading scene (%s)...\n", SCENE_FILE);
+   if (xml_parse (SCENE_FILE))
+   {
+      fprintf (stderr, "error: Scene could not be loaded.\n");
+      return 1;
+   }
 
-   return 0;
+   /* Enter CLI */
+   return cli_enter ();
 }
 
 /**

@@ -1,10 +1,10 @@
 /**
- * scene.c - Scene class.
+ * xml.h - XML class.
  *
- * Copyright (c) 2011-2013, Jonas Johansson <jonasj76@gmail.com>
+ * Copyright (c) 2013, Jonas Johansson <jonasj76@gmail.com>
  *
  * Description:
- * This class defines the scene.
+ * This class defines the XML functions.
  *
  * License:
  * Permission to use, copy, modify, and/or distribute this software for any
@@ -20,18 +20,12 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef __SCENE_H__
-#define __SCENE_H__
+#ifndef __XML_H__
+#define __XML_H__
 
-#include "camera.h"
-#include "sphere.h"
+int xml_parse(char *doc);
 
-void scene_init (void);
-camera_t* scene_get_camera (void);
-sphere_t* scene_get_sphere (void);
-int scene_get_num_spheres (void);
-
-#endif /* __SCENE_H__ */
+#endif /* __XML_H__ */
 
 /**
  * Local Variables:

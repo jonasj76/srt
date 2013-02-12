@@ -1,7 +1,7 @@
 /**
  * cli.c - CLI class.
  *
- * Copyright (c) 2011, Jonas Johansson <jonasj76@gmail.com>
+ * Copyright (c) 2011-2013, Jonas Johansson <jonasj76@gmail.com>
  *
  * Description:
  * This class defines the CLI.
@@ -281,14 +281,11 @@ static void cli_enter_scene (void)
    }
 }
 
-void cli_enter (void)
+int cli_enter (void)
 {
    char* line;
    char* token;
    int quit = 0;
-
-   /* Init scene */
-   scene_init ();
 
    printf ("Enter 'help' for available commands.\n");
    while (!quit)
@@ -346,6 +343,8 @@ void cli_enter (void)
             printf ("Unknown command\n");
       }
    }
+
+   return 0;
 }
 
 /**

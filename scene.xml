@@ -1,0 +1,19 @@
+<scene>
+
+	<camera>
+		<data x="0" y="0" z="0" fov="45"></data>
+	</camera>
+
+	<sphere id="0">
+		<data x="0"    y="0" z="-600" radius="100" r="255" g="0"   b="0"></data>
+	</sphere>
+
+	<sphere id="1">
+		<data x="-200" y="0" z="-900" radius="100" r="0"   g="255" b="0"></data>
+	</sphere>
+
+	<sphere id="2">
+		<data x="200"  y="0" z="-900" radius="100" r="0"   g="0"   b="255"></data>
+	</sphere>
+
+</scene>

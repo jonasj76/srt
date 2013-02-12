@@ -4,6 +4,11 @@ Simple Ray Tracer
 "srt" is a simple ray tracer. Currently it only support rendering a scene
 containing only spheres. The scene is setup using a CLI.
 
+Building
+--------
+Building srt is as simple as:
+   make
+
 Render output selection
 -----------------------
 As default visual output a .tga file will be created which can be viewed by
@@ -21,12 +26,30 @@ an array of pixels, starting with the pixel at the lower left corner and then
 continuing with increasing x value. Each pixel is stored in three bytes
 starting with the red component followed by the green and then the blue.
 
-Building
---------
-Building srt is as simple as:
-   make
+Scene setup
+-----------
+The scene can be configured through the CLI or the "scene.xml" file.
+Use the command "help" in the CLI to get help.
+The "scene.xml" uses the follow tags and attributes:
+<scene>                                       - Begin Scene setup
+  <camera>                                    - Begin Camera setup
+    <data x="?" y="?" z="?"                   - Camera attributes,
+          fov="?">                              x,y,z - Camera position
+    </data>                                     fov   - Camera field of view
+  </camera>                                   - End camera setup
+  <sphere id="?">                             - Begin Sphere setup. Each sphere
+                                                must have an unique "id". At the
+                                                moment this can only be the number
+                                                0,1 or 2.
+    <data x="?" y="?" z="?"                   - Sphere attributes,
+          radius="?"                            x,y,z - Sphere center
+          r="?" g="?" b="?">                    radius - Sphere radius
+    </data>                                     r,g,b - Sphere color
+  </sphere>
+</scene>                                      - End of scene setup.
 
 Library dependencies
 --------------------
 - GNU C library, http://www.gnu.org/s/libc/
 - GNU Readline library, http://tiswww.case.edu/php/chet/readline/rltop.html
+- LibXML2, http://www.xmlsoft.org/
